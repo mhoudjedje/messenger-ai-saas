@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerMessengerWebhookRoutes } from "./messenger-webhook";
+import { registerStripeWebhookRoutes } from "./stripe-webhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -38,6 +39,8 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Messenger webhook routes
   registerMessengerWebhookRoutes(app);
+  // Stripe webhook routes (must be before express.json middleware for raw body)
+  registerStripeWebhookRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",

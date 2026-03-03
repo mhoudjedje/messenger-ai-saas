@@ -20,11 +20,11 @@
 - [ ] Implémenter rate limiting sur les appels OpenAI
 
 ## Phase 4 : Gestion des Abonnements Stripe
-- [ ] Configurer les plans d'abonnement dans Stripe (Free, Pro, Enterprise)
-- [ ] Créer endpoint POST `/api/webhooks/stripe` pour les événements Stripe
-- [ ] Implémenter logique de vérification du statut d'abonnement
-- [ ] Créer procédure tRPC pour créer une session Stripe Checkout
-- [ ] Gérer les événements : subscription.created, subscription.deleted, payment_failed
+- [x] Configurer les plans d'abonnement dans Stripe (Free, Pro, Enterprise)
+- [x] Créer endpoint POST `/api/stripe/webhook` pour les événements Stripe
+- [x] Implémenter logique de vérification du statut d'abonnement
+- [x] Créer procédure tRPC pour créer une session Stripe Checkout
+- [x] Gérer les événements : subscription.created, subscription.deleted, payment_failed
 - [ ] Implémenter essai gratuit (trial period)
 
 ## Phase 5 : Logique d'Automatisation Complète
@@ -35,14 +35,14 @@
 - [ ] Implémenter logging et monitoring
 
 ## Phase 6 : Tableau de Bord - Interface Utilisateur
-- [ ] Créer layout principal avec support RTL pour l'Arabe
-- [ ] Implémenter système multilingue (i18n) : Arabe/Français/Anglais
-- [ ] Créer page d'accueil/dashboard
-- [ ] Créer page de configuration de l'agent IA
-  - [ ] Champ pour la personnalité/instructions système
-  - [ ] Sélection de la langue de réponse
-  - [ ] Configuration des règles de réponse
-  - [ ] Préview des réponses
+- [x] Créer layout principal avec support RTL pour l'Arabe
+- [x] Implémenter système multilingue (i18n) : Arabe/Français/Anglais
+- [x] Créer page d'accueil/dashboard
+- [x] Créer page de configuration de l'agent IA
+  - [x] Champ pour la personnalité/instructions système
+  - [x] Sélection de la langue de réponse
+  - [x] Configuration des règles de réponse
+  - [x] Préview des réponses
 
 ## Phase 7 : Connexion Facebook Messenger OAuth
 - [ ] Implémenter OAuth Meta pour connecter les pages Facebook
