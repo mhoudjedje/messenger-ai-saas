@@ -1,31 +1,60 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
 
 /**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
+ * Page d'accueil - Redirige vers le dashboard si authentifié
  */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  useEffect(() => {
+    // Si l'utilisateur est authentifié, rediriger vers le dashboard
+    if (isAuthenticated && user) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, user, navigate]);
 
+  // Si en cours de chargement, afficher un spinner
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-slate-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si pas authentifié, afficher un message de bienvenue
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="text-center max-w-md">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            Messenger AI Automation
+          </h1>
+          <p className="text-slate-600 mb-8">
+            Automatisez vos réponses Messenger avec l'IA
+          </p>
+          <p className="text-sm text-slate-500">
+            Veuillez vous connecter pour continuer
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si authentifié mais pas encore redirigé
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="text-center">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+        <p className="text-slate-600">Redirection vers le dashboard...</p>
+      </div>
     </div>
   );
 }
