@@ -3,7 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
+import { registerOAuthRoutes } from "./oauth-routes";
 import { registerMessengerWebhookRoutes } from "./messenger-webhook";
 import { registerStripeWebhookRoutes } from "./stripe-webhook";
 import { appRouter } from "../routers";
@@ -35,7 +35,7 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
+  // OAuth routes for Facebook Messenger
   registerOAuthRoutes(app);
   // Messenger webhook routes
   registerMessengerWebhookRoutes(app);

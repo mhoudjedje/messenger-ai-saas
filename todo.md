@@ -103,3 +103,17 @@
 - [ ] Documenter l'API et les endpoints
 - [ ] Créer guide de dépannage
 - [ ] Préparer le PoC pour la démonstration
+
+
+## Phase 7.1 : OAuth Meta - Connexion de Pages Facebook
+- [ ] Créer endpoint GET `/api/oauth/facebook` pour initier le flux OAuth
+- [ ] Créer endpoint GET `/api/oauth/facebook/callback` pour traiter le callback
+- [ ] Implémenter échange du code OAuth pour les tokens d'accès
+- [ ] Récupérer la liste des pages Facebook de l'utilisateur
+- [ ] Stocker les pages et tokens de manière sécurisée en base de données
+- [ ] Implémenter renouvellement automatique des tokens d'accès
+- [ ] Créer procédure tRPC pour lister les pages connectées
+- [ ] Créer procédure tRPC pour déconnecter une page
+- [ ] Créer interface React pour initier la connexion OAuth
+- [ ] Afficher la liste des pages connectées avec statut
+- [ ] Tester le flux OAuth complet avec une vraie page Facebook
