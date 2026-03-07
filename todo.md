@@ -16,7 +16,7 @@
 
 ### Correction OAuth Facebook
 - [x] Vérifier enregistrement registerMetaOAuthRoutes dans backend/index.ts - OK
-- [ ] Configurer proxy Vite pour /api/oauth/*
+- [x] Configurer proxy Vite pour /api/* - FAIT
 - [ ] Tester endpoint /api/oauth/facebook en production
 - [ ] Valider redirect URI dans Meta App Console
 
