@@ -15,6 +15,13 @@
       "when": 1772556203131,
       "tag": "0001_jittery_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772845832171,
+      "tag": "0002_unknown_lake",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,66 @@
-# Messenger AI Automation SaaS - TODO
+# Aiteam - Plateforme SaaS d'Automatisation IA Premium - TODO
 
-## Phase 1 : Configuration et Schéma de Base
+## PHASE 1 : Fondations, Auth & Design (Transformation en Aiteam)
+
+### Authentification Custom
+- [x] Mettre à jour schéma DB : table users avec phone, email, password_hash, provider
+- [x] Migration DB appliquée (otp_verifications table)
+- [x] Implémenter OTP Email (signup/login) - helpers créés
+- [x] Implémenter Google OAuth Login - helpers créés
+- [x] Créer routes d'authentification Aiteam - /api/auth/email/*, /api/auth/google/*
+- [ ] Créer pages Auth : Login, Signup, OTP Verification (UI React)
+- [ ] Implémenter Meta Cloud API OTP WhatsApp (Algérie)
+- [ ] Supprimer Manus Auth, utiliser Aiteam Auth custom
+
+### Correction OAuth Facebook
+- [x] Vérifier enregistrement registerMetaOAuthRoutes dans backend/index.ts - OK
+- [ ] Configurer proxy Vite pour /api/oauth/*
+- [ ] Tester endpoint /api/oauth/facebook en production
+- [ ] Valider redirect URI dans Meta App Console
+
+### Design System Moderne & Épuré
+- [ ] Appliquer skill-design-system-modern-clean (WhatsApp-inspired)
+- [ ] Implémenter Tailwind 4 avec OKLCH colors
+- [ ] Créer composants : Buttons (pill-shaped), Cards, Chat bubbles
+- [ ] Support RTL complet pour Arabe
+- [ ] Icônes filaires + emojis
+- [ ] Typographie moderne (sans-serif)
+
+### Refonte UI
+- [ ] Refaire page d'accueil (landing page premium)
+- [ ] Refaire dashboard avec nouveau design
+- [ ] Refaire pages Auth avec design moderne
+- [ ] Tester sur mobile (responsive)
+
+---
+
+## PHASE 2 : Monétisation & Onboarding (Semaines 3-4)
+- [ ] Intégrer Stripe (International)
+- [ ] Intégrer Chargily Pay (Algérie - Edahabia/CIB)
+- [ ] Créer tunnel premium (paywall)
+- [ ] Wizard d'onboarding post-paiement
+- [ ] Gestion des abonnements
+
+---
+
+## PHASE 3 : Admin & Analytics (Semaines 5-6)
+- [ ] Dashboard Admin (/admin)
+- [ ] Gestion des utilisateurs
+- [ ] Monitoring des coûts OpenAI
+- [ ] Analytics clients
+
+---
+
+## PHASE 4 : Scale & Multi-Produits (Futur)
+- [ ] WhatsApp AI
+- [ ] Instagram AI
+- [ ] White Label
+
+---
+
+## ANCIEN : Messenger AI Automation SaaS - TODO
+
+## [ARCHIVED] Phase 1 : Configuration et Schéma de Base
 - [x] Configuration des secrets Stripe API key et OpenAI API key
 - [x] Extension du schéma Drizzle avec tables pour Messenger, abonnements et conversations
 - [x] Migration de la base de données

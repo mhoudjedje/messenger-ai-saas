@@ -7,4 +7,11 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  googleOAuthClientId: process.env.GOOGLE_OAUTH_CLIENT_ID ?? "",
+  googleOAuthClientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "",
+  chargilyPublicKey: process.env.CHARGILY_PUBLIC_KEY ?? "",
+  chargilySecretKey: process.env.CHARGILY_SECRET_KEY ?? "",
+  metaCloudApiAccessToken: process.env.META_CLOUD_API_ACCESS_TOKEN ?? "",
+  metaPhoneNumberId: process.env.META_PHONE_NUMBER_ID ?? "",
+  metaWhatsappBusinessAccountId: process.env.META_WHATSAPP_BUSINESS_ACCOUNT_ID ?? "",
 };

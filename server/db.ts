@@ -19,8 +19,8 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
+  if (!user.openId && !user.email && !user.phone) {
+    throw new Error("User must have openId, email, or phone");
   }
 
   const db = await getDb();
@@ -32,10 +32,13 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   try {
     const values: InsertUser = {
       openId: user.openId,
+      email: user.email,
+      phone: user.phone,
+      provider: user.provider || 'manus',
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "loginMethod"] as const;
+    const textFields = ["name", "email", "loginMethod", "phone", "passwordHash"] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -47,6 +50,16 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
 
     textFields.forEach(assignNullable);
+
+    if (user.provider !== undefined) {
+      values.provider = user.provider;
+      updateSet.provider = user.provider;
+    }
+
+    if (user.isVerified !== undefined) {
+      values.isVerified = user.isVerified;
+      updateSet.isVerified = user.isVerified;
+    }
 
     if (user.lastSignedIn !== undefined) {
       values.lastSignedIn = user.lastSignedIn;

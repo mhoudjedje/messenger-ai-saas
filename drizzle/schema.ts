@@ -12,12 +12,20 @@ export const users = mysqlTable("users", {
    * Use this for relations between tables.
    */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  /** Manus OAuth identifier (openId) for backward compatibility */
+  openId: varchar("openId", { length: 64 }).unique(),
+  /** Phone number for OTP authentication (Algérie) */
+  phone: varchar("phone", { length: 20 }).unique(),
+  /** Email address */
+  email: varchar("email", { length: 320 }).unique(),
+  /** Password hash (for email/phone signup) */
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  /** Authentication provider: 'email', 'phone', 'google', 'manus' */
+  provider: mysqlEnum("provider", ["email", "phone", "google", "manus"]).notNull(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  isVerified: boolean("isVerified").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -122,6 +130,20 @@ export const subscriptions = mysqlTable("subscriptions", {
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = typeof subscriptions.$inferInsert;
+
+// OTP Verification - Stockage temporaire des codes OTP
+export const otpVerifications = mysqlTable("otp_verifications", {
+  id: int("id").autoincrement().primaryKey(),
+  phoneOrEmail: varchar("phoneOrEmail", { length: 320 }).notNull(),
+  code: varchar("code", { length: 6 }).notNull(),
+  type: mysqlEnum("type", ["phone", "email"]).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  attempts: int("attempts").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OtpVerification = typeof otpVerifications.$inferSelect;
+export type InsertOtpVerification = typeof otpVerifications.$inferInsert;
 
 // User Preferences - Préférences utilisateur
 export const userPreferences = mysqlTable("user_preferences", {

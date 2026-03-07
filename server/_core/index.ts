@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes as registerMetaOAuthRoutes } from "./oauth-routes";
 import { registerOAuthRoutes as registerManusoAuthRoutes } from "./oauth";
+import { registerAiteamAuthRoutes } from "./aiteam-auth-routes";
 import { registerMessengerWebhookRoutes } from "./messenger-webhook";
 import { registerStripeWebhookRoutes } from "./stripe-webhook";
 import { appRouter } from "../routers";
@@ -40,6 +41,8 @@ async function startServer() {
   registerManusoAuthRoutes(app);
   // OAuth routes for Facebook Messenger
   registerMetaOAuthRoutes(app);
+  // Aiteam Authentication routes (Email OTP + Google OAuth)
+  registerAiteamAuthRoutes(app);
   // Messenger webhook routes
   registerMessengerWebhookRoutes(app);
   // Stripe webhook routes (must be before express.json middleware for raw body)
