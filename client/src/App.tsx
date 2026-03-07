@@ -11,12 +11,18 @@ import AgentConfig from "./pages/AgentConfig";
 import Conversations from "./pages/Conversations";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import { LoginPage } from "./pages/Auth/Login";
+import { SignupPage } from "./pages/Auth/Signup";
+import { VerifyOTPPage } from "./pages/Auth/VerifyOTP";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/auth/login"} component={LoginPage} />
+      <Route path={"/auth/signup"} component={SignupPage} />
+      <Route path={"/auth/verify-otp"} component={VerifyOTPPage} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/pages/:pageId"} component={AgentConfig} />
       <Route path={"/conversations"} component={Conversations} />

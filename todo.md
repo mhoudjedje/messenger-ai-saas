@@ -8,9 +8,11 @@
 - [x] Implémenter OTP Email (signup/login) - helpers créés
 - [x] Implémenter Google OAuth Login - helpers créés
 - [x] Créer routes d'authentification Aiteam - /api/auth/email/*, /api/auth/google/*
-- [ ] Créer pages Auth : Login, Signup, OTP Verification (UI React)
+- [x] Créer pages Auth : Login, Signup, OTP Verification (UI React) - design moderne RTL
+- [x] Routes de navigation intégrées dans App.tsx
+- [x] Tests unitaires pour authentification (9 tests, tous passants)
 - [ ] Implémenter Meta Cloud API OTP WhatsApp (Algérie)
-- [ ] Supprimer Manus Auth, utiliser Aiteam Auth custom
+- [ ] Supprimer Manus Auth, utiliser Aiteam Auth custom (en production)
 
 ### Correction OAuth Facebook
 - [x] Vérifier enregistrement registerMetaOAuthRoutes dans backend/index.ts - OK
