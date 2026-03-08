@@ -189,3 +189,8 @@
 - [x] Cause racine 1 : Route /pages manquante dans App.tsx - CORRIGÉ
 - [x] Cause racine 2 : redirect_uri hardcodé à localhost - CORRIGÉ (dynamique)
 - [x] Cause racine 3 : cookie-parser manquant - CORRIGÉ (installé + configuré)
+
+## BUG (RÉSOLU) : Invalid Scope pages_manage_messaging dans OAuth Facebook
+- [x] Rechercher les scopes valides pour Meta Graph API v18.0
+- [x] Corriger les scopes dans meta-oauth.ts : pages_manage_messaging → pages_messaging
+- [ ] Tester le flux OAuth avec les nouveaux scopes (nécessite test utilisateur)

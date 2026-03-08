@@ -7,7 +7,7 @@ export const META_OAUTH_CONFIG = {
   clientId: process.env.META_APP_ID || '',
   clientSecret: process.env.META_APP_SECRET || '',
   redirectUri: process.env.META_OAUTH_REDIRECT_URI || 'http://localhost:3000/api/oauth/facebook/callback',
-  scope: 'pages_manage_metadata,pages_read_user_content,pages_manage_messaging,pages_show_list',
+  scope: 'pages_manage_metadata,pages_read_user_content,pages_messaging,pages_show_list',
   apiVersion: 'v18.0',
   graphApiUrl: 'https://graph.facebook.com',
 };
