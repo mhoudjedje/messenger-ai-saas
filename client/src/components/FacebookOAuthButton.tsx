@@ -16,7 +16,7 @@ export function FacebookOAuthButton({ onSuccess, onError }: FacebookOAuthButtonP
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
-  const getLoginUrlQuery = trpc.oauth.getLoginUrl.useQuery();
+  const getLoginUrlQuery = trpc.oauth.getLoginUrl.useQuery({ origin: window.location.origin });
 
   const translations = {
     ar: {

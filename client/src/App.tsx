@@ -11,6 +11,7 @@ import AgentConfig from "./pages/AgentConfig";
 import Conversations from "./pages/Conversations";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Pages from "./pages/Pages";
 import { LoginPage } from "./pages/Auth/Login";
 import { SignupPage } from "./pages/Auth/Signup";
 import { VerifyOTPPage } from "./pages/Auth/VerifyOTP";
@@ -24,6 +25,7 @@ function Router() {
       <Route path={"/auth/signup"} component={SignupPage} />
       <Route path={"/auth/verify-otp"} component={VerifyOTPPage} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/pages"} component={Pages} />
       <Route path={"/pages/:pageId"} component={AgentConfig} />
       <Route path={"/conversations"} component={Conversations} />
       <Route path={"/analytics"} component={Analytics} />

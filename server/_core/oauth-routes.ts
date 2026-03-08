@@ -21,19 +21,27 @@ export function registerOAuthRoutes(app: Express) {
       // Générer un state aléatoire pour la sécurité
       const state = nanoid();
 
-      // Stocker le state dans la session (ou dans un cache temporaire)
-      // Pour la simplicité, on le stocke dans un cookie
+      // Determine the origin dynamically from the request
+      const origin = `${req.protocol}://${req.get('host')}`;
+
+      // Stocker le state et l'origin dans des cookies
       res.cookie('oauth_state', state, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 10 * 60 * 1000, // 10 minutes
       });
+      res.cookie('oauth_origin', origin, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000, // 10 minutes
+      });
 
-      // Générer l'URL de connexion OAuth
-      const loginUrl = generateOAuthLoginUrl(state);
+      // Générer l'URL de connexion OAuth avec l'origin dynamique
+      const loginUrl = generateOAuthLoginUrl(state, origin);
 
-      console.log('[OAuth] Redirecting to Facebook login');
+      console.log(`[OAuth] Redirecting to Facebook login (origin: ${origin})`);
       res.redirect(loginUrl);
     } catch (error) {
       console.error('[OAuth] Error initiating OAuth flow:', error);
@@ -66,8 +74,11 @@ export function registerOAuthRoutes(app: Express) {
 
       console.log('[OAuth] Exchanging code for access token');
 
-      // Échanger le code pour un token d'accès
-      const tokenData = await exchangeCodeForToken(code as string);
+      // Récupérer l'origin stocké dans le cookie
+      const storedOrigin = req.cookies.oauth_origin;
+
+      // Échanger le code pour un token d'accès (avec l'origin dynamique)
+      const tokenData = await exchangeCodeForToken(code as string, storedOrigin);
       const userAccessToken = tokenData.access_token;
 
       // Récupérer les informations de l'utilisateur

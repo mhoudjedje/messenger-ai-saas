@@ -8,10 +8,13 @@ import { nanoid } from 'nanoid';
 
 export const oauthRouter = router({
   // Obtenir l'URL de connexion OAuth
-  getLoginUrl: protectedProcedure.query(async ({ ctx }) => {
+  getLoginUrl: protectedProcedure
+    .input(z.object({ origin: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
     try {
       const state = nanoid();
-      const loginUrl = generateOAuthLoginUrl(state);
+      const origin = input?.origin;
+      const loginUrl = generateOAuthLoginUrl(state, origin);
 
       return {
         success: true,

@@ -41,11 +41,18 @@ export interface OAuthUserData {
 
 /**
  * Génère l'URL de connexion OAuth Meta
+ * @param state - State CSRF token
+ * @param origin - Optional origin URL for dynamic redirect URI
  */
-export function generateOAuthLoginUrl(state: string): string {
+export function generateOAuthLoginUrl(state: string, origin?: string): string {
+  // Use dynamic origin if provided, otherwise fall back to config
+  const redirectUri = origin 
+    ? `${origin}/api/oauth/facebook/callback`
+    : META_OAUTH_CONFIG.redirectUri;
+
   const params = new URLSearchParams({
     client_id: META_OAUTH_CONFIG.clientId,
-    redirect_uri: META_OAUTH_CONFIG.redirectUri,
+    redirect_uri: redirectUri,
     scope: META_OAUTH_CONFIG.scope,
     state,
     response_type: 'code',
@@ -57,18 +64,25 @@ export function generateOAuthLoginUrl(state: string): string {
 
 /**
  * Échange le code OAuth pour un token d'accès utilisateur
+ * @param code - Authorization code from OAuth callback
+ * @param origin - Optional origin URL for dynamic redirect URI (must match the one used in login URL)
  */
-export async function exchangeCodeForToken(code: string): Promise<{
+export async function exchangeCodeForToken(code: string, origin?: string): Promise<{
   access_token: string;
   token_type: string;
 }> {
+  // Use dynamic origin if provided, otherwise fall back to config
+  const redirectUri = origin 
+    ? `${origin}/api/oauth/facebook/callback`
+    : META_OAUTH_CONFIG.redirectUri;
+
   try {
     const response = await axios.post(
       `${META_OAUTH_CONFIG.graphApiUrl}/${META_OAUTH_CONFIG.apiVersion}/oauth/access_token`,
       {
         client_id: META_OAUTH_CONFIG.clientId,
         client_secret: META_OAUTH_CONFIG.clientSecret,
-        redirect_uri: META_OAUTH_CONFIG.redirectUri,
+        redirect_uri: redirectUri,
         code,
       }
     );

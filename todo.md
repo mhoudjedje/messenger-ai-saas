@@ -17,7 +17,11 @@
 ### Correction OAuth Facebook
 - [x] Vérifier enregistrement registerMetaOAuthRoutes dans backend/index.ts - OK
 - [x] Configurer proxy Vite pour /api/* - FAIT
-- [ ] Tester endpoint /api/oauth/facebook en production
+- [x] Créer page /pages manquante (cause racine du 404)
+- [x] Rendre redirect_uri dynamique (origin au lieu de localhost)
+- [x] Installer et configurer cookie-parser pour lire les cookies OAuth
+- [x] Passer origin dynamique au tRPC oauth.getLoginUrl
+- [ ] Tester endpoint /api/oauth/facebook en production (nécessite configuration Meta App Console)
 - [ ] Valider redirect URI dans Meta App Console
 
 ### Design System Moderne & Épuré
@@ -179,3 +183,9 @@
 - [ ] Créer interface React pour initier la connexion OAuth
 - [ ] Afficher la liste des pages connectées avec statut
 - [ ] Tester le flux OAuth complet avec une vraie page Facebook
+
+## BUG (RÉSOLU) : Erreur 404 persistante sur Connect Page
+- [x] Diagnostic approfondi du flux OAuth Facebook (frontend → backend → Meta)
+- [x] Cause racine 1 : Route /pages manquante dans App.tsx - CORRIGÉ
+- [x] Cause racine 2 : redirect_uri hardcodé à localhost - CORRIGÉ (dynamique)
+- [x] Cause racine 3 : cookie-parser manquant - CORRIGÉ (installé + configuré)
