@@ -9,6 +9,7 @@ import { registerOAuthRoutes as registerManusoAuthRoutes } from "./oauth";
 import { registerAiteamAuthRoutes } from "./aiteam-auth-routes";
 import { registerMessengerWebhookRoutes } from "./messenger-webhook";
 import { registerStripeWebhookRoutes } from "./stripe-webhook";
+import { registerChargilyRoutes } from "../chargily-routes";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -50,6 +51,8 @@ async function startServer() {
   registerMessengerWebhookRoutes(app);
   // Stripe webhook routes (must be before express.json middleware for raw body)
   registerStripeWebhookRoutes(app);
+  // Chargily payment routes
+  registerChargilyRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",

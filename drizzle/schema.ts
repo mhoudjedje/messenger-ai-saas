@@ -26,6 +26,16 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   isVerified: boolean("isVerified").default(false).notNull(),
+  /** Subscription status: free, pro, enterprise */
+  subscriptionStatus: mysqlEnum("subscriptionStatus", ["free", "pro", "enterprise"]).default("free").notNull(),
+  /** Subscription plan: monthly, yearly */
+  subscriptionPlan: mysqlEnum("subscriptionPlan", ["monthly", "yearly"]),
+  /** Subscription expiration date */
+  subscriptionExpiresAt: timestamp("subscriptionExpiresAt"),
+  /** Payment provider: stripe, chargily */
+  paymentProvider: mysqlEnum("paymentProvider", ["stripe", "chargily"]),
+  /** Customer ID from payment provider */
+  paymentCustomerId: varchar("paymentCustomerId", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -145,6 +155,25 @@ export const otpVerifications = mysqlTable("otp_verifications", {
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtpVerification = typeof otpVerifications.$inferInsert;
 
+// Payments - Historique des paiements (Stripe + Chargily)
+export const payments = mysqlTable("payments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  provider: mysqlEnum("provider", ["stripe", "chargily"]).notNull(),
+  providerPaymentId: varchar("providerPaymentId", { length: 255 }).notNull().unique(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  status: mysqlEnum("status", ["pending", "completed", "failed", "refunded"]).default("pending").notNull(),
+  planType: mysqlEnum("planType", ["pro", "enterprise"]).notNull(),
+  planDuration: mysqlEnum("planDuration", ["monthly", "yearly"]).notNull(),
+  metadata: json("metadata"), // Additional data from payment provider
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = typeof payments.$inferInsert;
+
 // User Preferences - Préférences utilisateur
 export const userPreferences = mysqlTable("user_preferences", {
   id: int("id").autoincrement().primaryKey(),
@@ -166,6 +195,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   agentConfigs: many(agentConfigs),
   conversations: many(conversations),
   subscriptions: many(subscriptions),
+  payments: many(payments),
   preferences: one(userPreferences),
 }));
 
@@ -193,6 +223,10 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
   user: one(users, { fields: [subscriptions.userId], references: [users.id] }),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  user: one(users, { fields: [payments.userId], references: [users.id] }),
 }));
 
 export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({

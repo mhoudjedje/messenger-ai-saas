@@ -41,9 +41,26 @@
 ---
 
 ## PHASE 2 : Monétisation & Onboarding (Semaines 3-4)
-- [ ] Intégrer Stripe (International)
-- [ ] Intégrer Chargily Pay (Algérie - Edahabia/CIB)
-- [ ] Créer tunnel premium (paywall)
+
+### Intégration Chargily Pay (Algérie)
+- [x] Schéma DB : table payments + champs abonnement users
+- [x] Helpers Chargily Pay (checkout, webhooks, pricing)
+- [x] Routes Express Chargily (/api/payments/chargily/*)
+- [x] tRPC procedures pour paiements
+- [x] Tests unitaires (36 tests passants)
+- [ ] Pages UI pour tunnel premium
+- [ ] Intégration avec dashboard
+
+### Intégration Stripe (International)
+- [ ] Helpers Stripe (checkout, webhooks, pricing)
+- [ ] Routes Express Stripe (/api/payments/stripe/*)
+- [ ] tRPC procedures pour Stripe
+- [ ] Tests unitaires
+
+### Tunnel Premium & Onboarding
+- [ ] Page de sélection de plan (Pro/Enterprise)
+- [ ] Page de sélection de durée (Monthly/Yearly)
+- [ ] Redirection vers Chargily (Algérie) ou Stripe (International)
 - [ ] Wizard d'onboarding post-paiement
 - [ ] Gestion des abonnements
 
@@ -203,3 +220,42 @@
 - [x] Correction : META_OAUTH_REDIRECT_URI env var utilisée pour redirect_uri fixe (pas localhost)
 - [x] Tests unitaires pour valider la redirect_uri (28 tests passants)
 - [ ] Test utilisateur final avec un vrai compte Facebook
+
+
+## PHASE 2 : Monétisation & Onboarding (EN COURS)
+
+### Chargily Pay (Algérie)
+- [ ] Intégrer SDK Chargily Pay
+- [ ] Créer route POST /api/payments/chargily/checkout
+- [ ] Implémenter webhook Chargily pour payment.success
+- [ ] Créer route POST /api/payments/chargily/webhook
+- [ ] Activer l'abonnement après confirmation du paiement
+- [ ] Afficher le formulaire de paiement Chargily dans le tunnel premium
+
+### Stripe (International)
+- [ ] Intégrer SDK Stripe
+- [ ] Créer route POST /api/payments/stripe/checkout
+- [ ] Implémenter webhook Stripe pour payment_intent.succeeded
+- [ ] Créer route POST /api/payments/stripe/webhook
+- [ ] Activer l'abonnement après confirmation du paiement
+- [ ] Afficher le formulaire de paiement Stripe dans le tunnel premium
+
+### Tunnel Premium & Paywall
+- [ ] Créer page /premium avec les plans d'abonnement
+- [ ] Implémenter logique : utilisateurs non payants → redirect vers /premium
+- [ ] Créer composant de sélection de plan (Algérie vs International)
+- [ ] Créer bouton "Passer au Premium" pour chaque plan
+- [ ] Afficher le statut d'abonnement dans le dashboard
+
+### Wizard d'Onboarding Post-Paiement
+- [ ] Créer page /onboarding après paiement réussi
+- [ ] Étape 1 : Sélection de la langue (Arabe, Français, Anglais)
+- [ ] Étape 2 : Configuration de la personnalité de l'agent IA
+- [ ] Étape 3 : Connexion de la première page Facebook
+- [ ] Étape 4 : Aperçu et activation de l'agent
+
+### Gestion des Abonnements
+- [ ] Ajouter champs subscription_status, subscription_plan, subscription_expires_at à la table users
+- [ ] Créer procédure tRPC pour vérifier le statut d'abonnement
+- [ ] Créer procédure tRPC pour obtenir les détails d'abonnement
+- [ ] Implémenter vérification d'abonnement dans les procédures protégées
