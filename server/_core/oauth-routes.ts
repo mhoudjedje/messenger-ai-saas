@@ -6,28 +6,18 @@ import {
   getUserInfo,
   getUserPages,
   getPageInfo,
+  META_OAUTH_CONFIG,
 } from '../meta-oauth';
 import { getDb } from '../db';
 import { messengerPages } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 
 /**
- * Helper to get the correct origin from a request
- * Handles proxy scenarios where req.protocol might be 'http' even behind HTTPS
- */
-function getOriginFromRequest(req: Request): string {
-  // Trust X-Forwarded-Proto header from reverse proxies
-  const protocol = req.headers['x-forwarded-proto'] as string || req.protocol;
-  const host = req.headers['x-forwarded-host'] as string || req.get('host') || 'localhost:3000';
-  
-  // In production, always use HTTPS
-  const finalProtocol = host.includes('localhost') ? protocol : 'https';
-  
-  return `${finalProtocol}://${host}`;
-}
-
-/**
  * Enregistre les routes OAuth Meta
+ * 
+ * IMPORTANT: The redirect_uri MUST always use META_OAUTH_REDIRECT_URI env var
+ * because Facebook validates it against the configured domain in App Console.
+ * Dynamic origin detection fails behind proxies (returns localhost:3000).
  */
 export function registerOAuthRoutes(app: Express) {
   // Trust proxy headers (important for production behind reverse proxy)
@@ -39,30 +29,25 @@ export function registerOAuthRoutes(app: Express) {
       // Générer un state aléatoire pour la sécurité CSRF
       const state = nanoid();
 
-      // Determine the origin dynamically from the request
-      const origin = getOriginFromRequest(req);
+      // ALWAYS use the configured redirect URI from env (not dynamic origin)
+      // This ensures it matches exactly what's in Meta App Console
+      const redirectUri = META_OAUTH_CONFIG.redirectUri;
 
-      console.log(`[OAuth] Initiating OAuth flow (origin: ${origin})`);
+      console.log(`[OAuth] Initiating OAuth flow`);
+      console.log(`[OAuth] Using redirect_uri: ${redirectUri}`);
 
-      // Stocker le state et l'origin dans des cookies
+      // Stocker le state dans un cookie
       res.cookie('oauth_state', state, {
         httpOnly: true,
-        secure: !origin.includes('localhost'),
-        sameSite: 'lax',
-        maxAge: 10 * 60 * 1000, // 10 minutes
-      });
-      res.cookie('oauth_origin', origin, {
-        httpOnly: true,
-        secure: !origin.includes('localhost'),
+        secure: true,
         sameSite: 'lax',
         maxAge: 10 * 60 * 1000, // 10 minutes
       });
 
-      // Générer l'URL de connexion OAuth avec l'origin dynamique
-      const loginUrl = generateOAuthLoginUrl(state, origin);
+      // Générer l'URL de connexion OAuth - pass undefined for origin so it uses config redirectUri
+      const loginUrl = generateOAuthLoginUrl(state);
 
-      console.log(`[OAuth] Redirecting to Facebook login URL`);
-      console.log(`[OAuth] Redirect URI will be: ${origin}/api/oauth/facebook/callback`);
+      console.log(`[OAuth] Redirecting to Facebook login`);
       
       res.redirect(loginUrl);
     } catch (error) {
@@ -100,12 +85,8 @@ export function registerOAuthRoutes(app: Express) {
 
       console.log('[OAuth] Exchanging code for access token');
 
-      // Récupérer l'origin stocké dans le cookie
-      const storedOrigin = req.cookies?.oauth_origin;
-      console.log(`[OAuth] Using stored origin: ${storedOrigin}`);
-
-      // Échanger le code pour un token d'accès (avec l'origin dynamique)
-      const tokenData = await exchangeCodeForToken(code as string, storedOrigin);
+      // Échanger le code pour un token d'accès (uses config redirectUri, no origin needed)
+      const tokenData = await exchangeCodeForToken(code as string);
       const userAccessToken = tokenData.access_token;
 
       // Récupérer les informations de l'utilisateur
@@ -177,7 +158,6 @@ export function registerOAuthRoutes(app: Express) {
 
       // Nettoyer les cookies OAuth
       res.clearCookie('oauth_state');
-      res.clearCookie('oauth_origin');
 
       console.log(`[OAuth] Successfully connected ${connectedPagesCount} pages for user ${userId}`);
 

@@ -200,4 +200,6 @@
 - [x] Correction : Le bouton ouvre maintenant /api/oauth/facebook (route Express) qui set les cookies et redirige
 - [x] Correction : Ajout de trust proxy + HTTPS forcé en production pour redirect_uri correct
 - [x] Correction : Authorize callback URL ajouté dans Meta App Console Advanced Settings
-- [ ] Test utilisateur final
+- [x] Correction : META_OAUTH_REDIRECT_URI env var utilisée pour redirect_uri fixe (pas localhost)
+- [x] Tests unitaires pour valider la redirect_uri (28 tests passants)
+- [ ] Test utilisateur final avec un vrai compte Facebook
