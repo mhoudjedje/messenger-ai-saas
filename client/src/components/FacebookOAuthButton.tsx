@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FacebookOAuthButtonProps {
@@ -15,8 +14,6 @@ export function FacebookOAuthButton({ onSuccess, onError }: FacebookOAuthButtonP
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
-
-  const getLoginUrlQuery = trpc.oauth.getLoginUrl.useQuery({ origin: window.location.origin });
 
   const translations = {
     ar: {
@@ -59,44 +56,40 @@ export function FacebookOAuthButton({ onSuccess, onError }: FacebookOAuthButtonP
 
   const t = translations[language as keyof typeof translations] || translations.en;
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
     try {
       setStatus('loading');
-      
-      // Appeler la query pour obtenir l'URL
-      const result = getLoginUrlQuery.data;
-      
-      if (!result?.url) {
-        // Refetch si les données ne sont pas disponibles
-        await getLoginUrlQuery.refetch();
+
+      // Open the Express OAuth route directly - this sets the state cookie
+      // and redirects to Facebook properly with the correct redirect_uri
+      const oauthUrl = `${window.location.origin}/api/oauth/facebook`;
+
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      const popup = window.open(
+        oauthUrl,
+        'facebook_oauth',
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
+      );
+
+      if (!popup) {
+        setStatus('error');
+        setMessage(language === 'ar' 
+          ? 'تعذر فتح نافذة الاتصال. تحقق من إعدادات حظر النوافذ المنبثقة.'
+          : 'Unable to open connection window. Check your popup blocker settings.');
+        onError?.('Popup blocked');
         return;
       }
 
-      if (result.url) {
-        // Ouvrir la page de connexion Facebook dans une nouvelle fenêtre
-        const width = 500;
-        const height = 600;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-
-        const popup = window.open(
-          result.url,
-          'facebook_oauth',
-          `width=${width},height=${height},left=${left},top=${top}`
-        );
-
-        if (!popup) {
-          setStatus('error');
-          setMessage('Impossible d\'ouvrir la fenêtre de connexion. Vérifiez vos paramètres de popup.');
-          onError?.('Popup blocked');
-          return;
-        }
-
-        // Vérifier si la fenêtre est fermée
-        const checkPopup = setInterval(() => {
+      // Monitor the popup window
+      const checkPopup = setInterval(() => {
+        try {
           if (popup.closed) {
             clearInterval(checkPopup);
-            // La connexion est terminée, attendre un peu avant de fermer le dialog
+            // Give a moment for the callback to process
             setTimeout(() => {
               setStatus('success');
               setMessage(t.successMessage);
@@ -107,8 +100,10 @@ export function FacebookOAuthButton({ onSuccess, onError }: FacebookOAuthButtonP
               }, 2000);
             }, 1000);
           }
-        }, 500);
-      }
+        } catch (e) {
+          // Cross-origin access error - popup is still on Facebook domain
+        }
+      }, 500);
     } catch (error) {
       console.error('OAuth error:', error);
       setStatus('error');
@@ -136,19 +131,18 @@ export function FacebookOAuthButton({ onSuccess, onError }: FacebookOAuthButtonP
 
           <div className="space-y-4">
             {status === 'idle' && (
-            <Button
-              onClick={handleConnect}
-              disabled={getLoginUrlQuery.isLoading}
-              className="w-full"
-            >
-              {getLoginUrlQuery.isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t.connecting}
-                  </>
-                ) : (
-                  t.connect
-                )}
+              <Button
+                onClick={handleConnect}
+                className="w-full"
+              >
+                {t.connect}
+              </Button>
+            )}
+
+            {status === 'loading' && (
+              <Button disabled className="w-full">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t.connecting}
               </Button>
             )}
 
@@ -171,7 +165,6 @@ export function FacebookOAuthButton({ onSuccess, onError }: FacebookOAuthButtonP
                 <p className="text-sm text-gray-600">{message}</p>
                 <Button
                   onClick={handleConnect}
-                  disabled={getLoginUrlQuery.isLoading}
                   variant="outline"
                   className="w-full"
                 >

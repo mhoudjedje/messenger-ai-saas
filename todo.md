@@ -193,4 +193,11 @@
 ## BUG (RÉSOLU) : Invalid Scope pages_manage_messaging dans OAuth Facebook
 - [x] Rechercher les scopes valides pour Meta Graph API v18.0
 - [x] Corriger les scopes dans meta-oauth.ts : pages_manage_messaging → pages_messaging
-- [ ] Tester le flux OAuth avec les nouveaux scopes (nécessite test utilisateur)
+- [x] Tester le flux OAuth avec les nouveaux scopes
+
+## BUG (RÉSOLU) : "Can't load URL" - Domain not in app's domains
+- [x] Diagnostic : FacebookOAuthButton ouvrait l'URL Facebook directement au lieu de /api/oauth/facebook
+- [x] Correction : Le bouton ouvre maintenant /api/oauth/facebook (route Express) qui set les cookies et redirige
+- [x] Correction : Ajout de trust proxy + HTTPS forcé en production pour redirect_uri correct
+- [x] Correction : Authorize callback URL ajouté dans Meta App Console Advanced Settings
+- [ ] Test utilisateur final
