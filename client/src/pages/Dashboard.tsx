@@ -136,7 +136,7 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('common.close')}</CardTitle>
+              <CardTitle className="text-lg">{t('dashboard.quickActions')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Button

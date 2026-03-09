@@ -64,23 +64,23 @@ export function registerOAuthRoutes(app: Express) {
       // Vérifier les erreurs OAuth
       if (error) {
         console.warn(`[OAuth] Error from Facebook: ${error} - ${error_description}`);
-        return res.redirect(`/dashboard?oauth_error=${error}`);
+        return res.redirect(`/oauth-callback?oauth_error=${error}`);
       }
 
       // Vérifier le state pour la sécurité
       const storedState = req.cookies?.oauth_state;
       if (!storedState) {
         console.warn('[OAuth] No stored state cookie found');
-        return res.redirect('/dashboard?oauth_error=no_state');
+        return res.redirect('/oauth-callback?oauth_error=no_state');
       }
       if (state !== storedState) {
         console.warn('[OAuth] State mismatch - possible CSRF attack');
-        return res.redirect('/dashboard?oauth_error=state_mismatch');
+        return res.redirect('/oauth-callback?oauth_error=state_mismatch');
       }
 
       if (!code) {
         console.warn('[OAuth] No authorization code received');
-        return res.redirect('/dashboard?oauth_error=no_code');
+        return res.redirect('/oauth-callback?oauth_error=no_code');
       }
 
       console.log('[OAuth] Exchanging code for access token');
@@ -101,14 +101,14 @@ export function registerOAuthRoutes(app: Express) {
       const userId = (req as any).user?.id;
       if (!userId) {
         console.warn('[OAuth] No authenticated user in session');
-        return res.redirect('/dashboard?oauth_error=not_authenticated');
+        return res.redirect('/oauth-callback?oauth_error=not_authenticated');
       }
 
       // Stocker les pages dans la base de données
       const db = await getDb();
       if (!db) {
         console.error('[OAuth] Database not available');
-        return res.redirect('/dashboard?oauth_error=db_error');
+        return res.redirect('/oauth-callback?oauth_error=db_error');
       }
 
       let connectedPagesCount = 0;
@@ -162,10 +162,10 @@ export function registerOAuthRoutes(app: Express) {
       console.log(`[OAuth] Successfully connected ${connectedPagesCount} pages for user ${userId}`);
 
       // Rediriger vers le dashboard avec un message de succès
-      res.redirect(`/dashboard?oauth_success=true&pages=${connectedPagesCount}`);
+      res.redirect(`/oauth-callback?oauth_success=true&pages=${connectedPagesCount}`);
     } catch (error) {
       console.error('[OAuth] Error in callback:', error);
-      res.redirect(`/dashboard?oauth_error=callback_error`);
+      res.redirect(`/oauth-callback?oauth_error=callback_error`);
     }
   });
 

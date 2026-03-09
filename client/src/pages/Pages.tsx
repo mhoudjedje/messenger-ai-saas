@@ -49,17 +49,14 @@ export default function Pages() {
           {t.backToDashboard}
         </Button>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">{t.title}</h1>
-          <p className="text-slate-600">{t.subtitle}</p>
-        </div>
-
-        {/* Connect New Page */}
-        <div className="mb-8">
+        {/* Header + Connect Button inline */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">{t.title}</h1>
+            <p className="text-slate-600">{t.subtitle}</p>
+          </div>
           <FacebookOAuthButton
             onSuccess={() => {
-              // Refresh the page list after successful connection
               window.location.reload();
             }}
             onError={(error) => {

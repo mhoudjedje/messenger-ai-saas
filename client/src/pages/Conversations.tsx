@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { arSA, fr, enUS } from 'date-fns/locale';
 
@@ -25,9 +26,21 @@ export default function Conversations() {
       conv.psid.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
+  const BackArrow = language === 'ar' ? ArrowRight : ArrowLeft;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8" dir={dir}>
       <div className="max-w-6xl mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-6"
+          onClick={() => navigate('/dashboard')}
+        >
+          <BackArrow className="w-4 h-4 me-2" />
+          {t('common.backToDashboard')}
+        </Button>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('conversations.title')}</h1>

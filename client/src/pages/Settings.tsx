@@ -5,13 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { Language, LANGUAGES } from '@/lib/i18n';
 
 export default function Settings() {
   const { t, dir, language, setLanguage } = useLanguage();
+  const [, navigate] = useLocation();
   const [timezone, setTimezone] = useState('Africa/Algiers');
+  const BackArrow = language === 'ar' ? ArrowRight : ArrowLeft;
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [notificationEmail, setNotificationEmail] = useState('');
 
@@ -22,6 +26,16 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8" dir={dir}>
       <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-6"
+          onClick={() => navigate('/dashboard')}
+        >
+          <BackArrow className="w-4 h-4 me-2" />
+          {t('common.backToDashboard')}
+        </Button>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('settings.title')}</h1>

@@ -259,3 +259,15 @@
 - [ ] Créer procédure tRPC pour vérifier le statut d'abonnement
 - [ ] Créer procédure tRPC pour obtenir les détails d'abonnement
 - [ ] Implémenter vérification d'abonnement dans les procédures protégées
+
+## BUG (EN COURS) : "Can't load URL" persiste après corrections
+- [ ] Diagnostic approfondi : vérifier redirect_uri exacte envoyée par le serveur
+- [ ] Vérifier configuration Meta App Console (App Domains, Valid OAuth Redirect URIs)
+- [ ] Comparer redirect_uri serveur vs Meta App Console
+- [ ] Corriger la cause racine
+
+## UX : Amélioration du flux de connexion Facebook
+- [x] Corriger le callback OAuth pour fermer le popup proprement (pas rediriger vers dashboard)
+- [x] Simplifier le flux : 1 seul bouton pour connecter une page (pas popup dialog + bouton)
+- [x] Ajouter des boutons retour dans toutes les pages du dashboard (Conversations, Analytics, Settings, Pages, AgentConfig)
+- [x] Corriger le titre Quick Actions dans le Dashboard (était 'common.close' au lieu de 'dashboard.quickActions')

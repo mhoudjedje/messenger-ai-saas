@@ -104,6 +104,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.edit': 'تعديل',
     'common.close': 'إغلاق',
     'common.back': 'رجوع',
+    'common.backToDashboard': 'العودة إلى لوحة التحكم',
+    'dashboard.quickActions': 'إجراءات سريعة',
   },
   fr: {
     // Navigation
@@ -202,6 +204,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.edit': 'Modifier',
     'common.close': 'Fermer',
     'common.back': 'Retour',
+    'common.backToDashboard': 'Retour au tableau de bord',
+    'dashboard.quickActions': 'Actions rapides',
   },
   en: {
     // Navigation
@@ -300,6 +304,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.edit': 'Edit',
     'common.close': 'Close',
     'common.back': 'Back',
+    'common.backToDashboard': 'Back to Dashboard',
+    'dashboard.quickActions': 'Quick Actions',
   },
 };
 

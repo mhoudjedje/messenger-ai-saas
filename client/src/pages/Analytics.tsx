@@ -3,11 +3,16 @@ import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 
 export default function Analytics() {
-  const { t, dir } = useLanguage();
+  const { t, dir, language } = useLanguage();
+  const [, navigate] = useLocation();
   const [period, setPeriod] = useState('7days');
+  const BackArrow = language === 'ar' ? ArrowRight : ArrowLeft;
 
   const { data: conversations } = trpc.messenger.getConversations.useQuery({ limit: 100 });
 
@@ -40,6 +45,16 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8" dir={dir}>
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-6"
+          onClick={() => navigate('/dashboard')}
+        >
+          <BackArrow className="w-4 h-4 me-2" />
+          {t('common.backToDashboard')}
+        </Button>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('analytics.title')}</h1>
