@@ -2,173 +2,255 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageSquare, Zap, Globe } from "lucide-react";
-import { getLoginUrl } from "@/const";
+import { Loader2, Zap, Globe, Settings2, BarChart3, Link2, Sparkles, ArrowLeft, ArrowRight, Shield } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-/**
- * Page d'accueil - Affiche la page de connexion ou redirige vers le dashboard
- */
+const HERO_PHONE_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663339762799/CRJ7dbQpAuuzkjiSmNTV9Z/hero-phone-mockup-G2o4RCDamfyq9n4fxUE9M7.webp";
+const LOGO_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663339762799/CRJ7dbQpAuuzkjiSmNTV9Z/aiteam-logo-XyYJ4JqTuoUA2MQxfVNvRB.webp";
+
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const { t, dir } = useLanguage();
 
   useEffect(() => {
-    // Si l'utilisateur est authentifié, rediriger vers le dashboard
     if (isAuthenticated && user) {
       navigate("/dashboard");
     }
   }, [isAuthenticated, user, navigate]);
 
-  // Si en cours de chargement, afficher un spinner
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-slate-600">Chargement...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
   }
 
-  // Si pas authentifié, afficher la page de connexion
   if (!isAuthenticated) {
+    const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-purple-50">
-        {/* Header */}
-        <div className="border-b border-slate-200 bg-white/50 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-slate-900">Messenger AI</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left Side - Features */}
-            <div className="space-y-8">
-              <div>
-                <h1 className="text-5xl font-bold text-slate-900 mb-4">
-                  Automatisez vos réponses Messenger avec l'IA
-                </h1>
-                <p className="text-xl text-slate-600">
-                  Répondez instantanément à vos clients avec un agent IA intelligent, multilingue et disponible 24/7.
-                </p>
+      <div className="min-h-screen bg-background">
+        {/* Navigation */}
+        <nav className="sticky top-0 z-50 glass border-b border-border/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center gap-3">
+                <img src={LOGO_IMG} alt="AITeam" className="h-9 w-9" />
+                <span className="text-xl font-bold text-foreground">{t('landing.brand')}</span>
               </div>
-
-              {/* Features List */}
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white">
-                      <Zap className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-slate-900">Réponses Instantanées</h3>
-                    <p className="text-slate-600">Répondez aux messages en moins d'une seconde</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-600 text-white">
-                      <Globe className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-slate-900">Multilingue</h3>
-                    <p className="text-slate-600">Support Arabe, Français, Anglais et plus</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-600 text-white">
-                      <MessageSquare className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-slate-900">Personnalisable</h3>
-                    <p className="text-slate-600">Configurez la personnalité et les règles de votre agent</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side - Login Card */}
-            <div className="flex items-center justify-center">
-              <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Bienvenue</h2>
-                  <p className="text-slate-600">Connectez-vous pour commencer</p>
-                </div>
-
+              <div className="flex items-center gap-3">
                 <Button
-                  onClick={() => window.location.href = getLoginUrl()}
-                  size="lg"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors"
+                  variant="ghost"
+                  onClick={() => navigate("/auth/login")}
+                  className="text-muted-foreground hover:text-foreground font-medium"
                 >
-                  Se connecter avec Manus
+                  {t('landing.login')}
                 </Button>
+                <Button
+                  onClick={() => navigate("/auth/signup")}
+                  className="btn-brand text-sm"
+                >
+                  {t('landing.signup')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </nav>
 
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Text Content */}
+              <div className="space-y-8 order-2 lg:order-1">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Messenger AI Replier</span>
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground leading-tight tracking-tight">
+                  {t('landing.heroTitle')}
+                </h1>
+
+                <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl">
+                  {t('landing.heroSubtitle')}
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    onClick={() => navigate("/auth/signup")}
+                    size="lg"
+                    className="btn-brand text-base px-10 py-6"
+                  >
+                    {t('landing.cta')}
+                    <ArrowIcon className="h-5 w-5 ms-2" />
+                  </Button>
+                </div>
+
+                {/* Social Proof Stats */}
+                <div className="flex items-center gap-8 pt-4">
+                  <div>
+                    <div className="text-2xl font-bold text-foreground">500+</div>
+                    <div className="text-sm text-muted-foreground">{t('landing.businesses')}</div>
+                  </div>
+                  <div className="w-px h-10 bg-border" />
+                  <div>
+                    <div className="text-2xl font-bold text-foreground">50K+</div>
+                    <div className="text-sm text-muted-foreground">{t('landing.messagesHandled')}</div>
+                  </div>
+                  <div className="w-px h-10 bg-border" />
+                  <div>
+                    <div className="text-2xl font-bold text-foreground">99.9%</div>
+                    <div className="text-sm text-muted-foreground">{t('landing.uptime')}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone Mockup */}
+              <div className="flex justify-center order-1 lg:order-2">
                 <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-slate-500">ou</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 text-sm text-slate-600">
-                  <p>
-                    <strong>Pas encore de compte ?</strong> Créez-en un gratuitement sur Manus.
-                  </p>
-                  <p className="text-xs">
-                    En vous connectant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
-                  </p>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-200">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">1000+</div>
-                    <div className="text-xs text-slate-600">Utilisateurs</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">99%</div>
-                    <div className="text-xs text-slate-600">Uptime</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">24/7</div>
-                    <div className="text-xs text-slate-600">Support</div>
-                  </div>
+                  <div className="absolute -inset-8 bg-gradient-to-tr from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
+                  <img
+                    src={HERO_PHONE_IMG}
+                    alt="AITeam Bot Chat"
+                    className="relative w-72 sm:w-80 lg:w-96 drop-shadow-2xl"
+                  />
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 lg:py-28">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                {t('landing.feature1Title').split(' ')[0]}... {t('landing.feature3Title').split(' ')[0]}...
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                {t('landing.heroSubtitle')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { icon: Zap, title: t('landing.feature1Title'), desc: t('landing.feature1Desc'), color: 'text-amber-500', bg: 'bg-amber-50' },
+                { icon: Globe, title: t('landing.feature2Title'), desc: t('landing.feature2Desc'), color: 'text-primary', bg: 'bg-primary/10' },
+                { icon: Settings2, title: t('landing.feature3Title'), desc: t('landing.feature3Desc'), color: 'text-violet-500', bg: 'bg-violet-50' },
+                { icon: BarChart3, title: t('landing.feature4Title'), desc: t('landing.feature4Desc'), color: 'text-blue-500', bg: 'bg-blue-50' },
+              ].map((feature, i) => (
+                <div key={i} className="card-brand p-6 hover:shadow-lg transition-shadow duration-300 group">
+                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${feature.bg} ${feature.color} mb-5 group-hover:scale-110 transition-transform`}>
+                    <feature.icon className="h-6 w-6" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works Section */}
+        <section className="section-dark py-20 lg:py-28 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                {t('landing.howItWorks')}
+              </h2>
+              <p className="text-lg opacity-70 max-w-2xl mx-auto">
+                {t('landing.heroSubtitle')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { num: '01', icon: Link2, title: t('landing.step1Title'), desc: t('landing.step1Desc') },
+                { num: '02', icon: Settings2, title: t('landing.step2Title'), desc: t('landing.step2Desc') },
+                { num: '03', icon: Sparkles, title: t('landing.step3Title'), desc: t('landing.step3Desc') },
+              ].map((step, i) => (
+                <div key={i} className="relative p-8 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors">
+                  <div className="text-5xl font-extrabold text-primary/30 mb-4">{step.num}</div>
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/20 text-primary mb-4">
+                    <step.icon className="h-6 w-6" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                  <p className="opacity-70 leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 lg:py-28">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="card-brand p-12 lg:p-16 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+              <div className="relative">
+                <img src={LOGO_IMG} alt="AITeam" className="h-16 w-16 mx-auto mb-6" />
+                <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                  {t('landing.cta')}
+                </h2>
+                <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+                  {t('landing.heroSubtitle')}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    onClick={() => navigate("/auth/signup")}
+                    size="lg"
+                    className="btn-brand text-base px-10 py-6"
+                  >
+                    {t('landing.signup')}
+                    <ArrowIcon className="h-5 w-5 ms-2" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => navigate("/auth/login")}
+                    className="rounded-full px-10 py-6 text-base border-2"
+                  >
+                    {t('landing.login')}
+                  </Button>
+                </div>
+                <div className="flex items-center justify-center gap-2 mt-6 text-sm text-muted-foreground">
+                  <Shield className="h-4 w-4" />
+                  <span>{t('premium.guarantee')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 bg-white/50 backdrop-blur-sm mt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-slate-600">
-            <p>© 2026 Messenger AI. Tous droits réservés.</p>
+        <footer className="border-t border-border py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <img src={LOGO_IMG} alt="AITeam" className="h-6 w-6" />
+                <span className="text-sm font-medium text-foreground">{t('landing.brand')}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">{t('landing.footer')}</p>
+            </div>
           </div>
-        </div>
+        </footer>
       </div>
     );
   }
 
-  // Si authentifié mais pas encore redirigé
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-        <p className="text-slate-600">Redirection vers le dashboard...</p>
+        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+        <p className="text-muted-foreground">{t('common.loading')}</p>
       </div>
     </div>
   );

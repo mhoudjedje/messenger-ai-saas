@@ -1,82 +1,158 @@
+import { useEffect } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { trpc } from '@/lib/trpc';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Clock, CreditCard } from 'lucide-react';
+import {
+  MessageSquare, Users, Clock, CreditCard, ArrowLeft, ArrowRight,
+  Settings, BarChart3, FileText, Loader2, Zap, LogOut
+} from 'lucide-react';
 import { useLocation } from 'wouter';
 
+const LOGO_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663339762799/CRJ7dbQpAuuzkjiSmNTV9Z/aiteam-logo-XyYJ4JqTuoUA2MQxfVNvRB.webp";
+
 export default function Dashboard() {
-  const { user } = useAuth();
-  const { t, dir } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
+  const { t, language, dir } = useLanguage();
+  const { hasAccess, loading: subLoading, status: subStatus } = useSubscription();
   const [, navigate] = useLocation();
 
-  // Obtenir les pages Messenger
-  const { data: pages, isLoading: pagesLoading } = trpc.messenger.getPages.useQuery();
+  const logoutMutation = trpc.auth.logout.useMutation({
+    onSuccess: () => {
+      window.location.href = '/';
+    },
+  });
 
-  // Obtenir les conversations
-  const { data: conversations } = trpc.messenger.getConversations.useQuery({ limit: 5 });
+  // Redirect to premium if no active subscription
+  useEffect(() => {
+    if (!authLoading && !subLoading && user && !hasAccess) {
+      navigate('/premium');
+    }
+  }, [authLoading, subLoading, user, hasAccess, navigate]);
 
-  if (!user) {
-    return null;
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth/login');
+    }
+  }, [authLoading, user, navigate]);
+
+  // Fetch data
+  const { data: pages, isLoading: pagesLoading } = trpc.messenger.getPages.useQuery(
+    undefined,
+    { enabled: !!user }
+  );
+  const { data: conversations } = trpc.messenger.getConversations.useQuery(
+    { limit: 5 },
+    { enabled: !!user }
+  );
+
+  if (authLoading || subLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">{t('common.loading')}</p>
+        </div>
+      </div>
+    );
   }
+
+  if (!user) return null;
+
+  const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+
+  const totalMessages = conversations?.reduce((sum, conv) => sum + conv.messageCount, 0) || 0;
+  const avgResponseTime = conversations?.length
+    ? Math.round(conversations.reduce((sum, conv) => sum + conv.avgResponseTime, 0) / conversations.length)
+    : 0;
 
   const stats = [
     {
       title: t('dashboard.activePages'),
       value: pages?.length || 0,
       icon: Users,
-      color: 'bg-blue-500',
+      color: 'bg-primary/10 text-primary',
     },
     {
       title: t('dashboard.totalMessages'),
-      value: conversations?.reduce((sum, conv) => sum + conv.messageCount, 0) || 0,
+      value: totalMessages,
       icon: MessageSquare,
-      color: 'bg-green-500',
+      color: 'bg-emerald-500/10 text-emerald-600',
     },
     {
       title: t('dashboard.avgResponseTime'),
-      value: conversations?.length
-        ? `${Math.round(conversations.reduce((sum, conv) => sum + conv.avgResponseTime, 0) / conversations.length)}ms`
-        : '0ms',
+      value: `${avgResponseTime}ms`,
       icon: Clock,
-      color: 'bg-purple-500',
+      color: 'bg-violet-500/10 text-violet-600',
     },
     {
       title: t('dashboard.subscriptionStatus'),
-      value: 'Active',
+      value: subStatus === 'free' ? 'Free' : subStatus === 'pro' ? 'Pro' : 'Enterprise',
       icon: CreditCard,
-      color: 'bg-orange-500',
+      color: 'bg-amber-500/10 text-amber-600',
     },
   ];
 
+  const quickActions = [
+    { label: t('pages.connectNew'), icon: Zap, path: '/pages', primary: true },
+    { label: t('conversations.title'), icon: MessageSquare, path: '/conversations' },
+    { label: t('analytics.title'), icon: BarChart3, path: '/analytics' },
+    { label: t('settings.title'), icon: Settings, path: '/settings' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8" dir={dir}>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-background">
+      {/* Top Nav */}
+      <nav className="sticky top-0 z-50 glass border-b border-border/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <img src={LOGO_IMG} alt="AITeam" className="h-8 w-8" />
+              <span className="text-lg font-bold text-foreground">{t('landing.brand')}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground hidden sm:block">
+                {user.name || user.email}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logoutMutation.mutate()}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            {t('dashboard.welcome')}, {user.name}
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {t('dashboard.welcome')}, {user.name || user.email?.split('@')[0]}
           </h1>
-          <p className="text-slate-600">{t('dashboard.title')}</p>
+          <p className="text-muted-foreground">{t('dashboard.title')}</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                  <div className={`${stat.color} p-2 rounded-lg`}>
-                    <Icon className="w-4 h-4 text-white" />
+              <div key={index} className="card-brand p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
+                  <div className={`p-2 rounded-xl ${stat.color}`}>
+                    <Icon className="w-4 h-4" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+              </div>
             );
           })}
         </div>
@@ -84,90 +160,97 @@ export default function Dashboard() {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Pages Section */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>{t('pages.title')}</CardTitle>
-              <CardDescription>{t('pages.connected')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pagesLoading ? (
-                <div className="text-center py-8">{t('common.loading')}</div>
-              ) : pages && pages.length > 0 ? (
-                <div className="space-y-4">
-                  {pages.map((page) => (
-                    <div
-                      key={page.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900">{page.pageName}</h3>
-                        <p className="text-sm text-slate-500">{page.pageId}</p>
+          <div className="lg:col-span-2">
+            <div className="card-brand overflow-hidden">
+              <div className="p-6 border-b border-border/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">{t('pages.title')}</h2>
+                    <p className="text-sm text-muted-foreground">{t('pages.connected')}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="btn-brand"
+                    onClick={() => navigate('/pages')}
+                  >
+                    {t('pages.connectNew')}
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6">
+                {pagesLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                  </div>
+                ) : pages && pages.length > 0 ? (
+                  <div className="space-y-3">
+                    {pages.map((page) => (
+                      <div
+                        key={page.id}
+                        className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-foreground">{page.pageName}</h3>
+                          <p className="text-xs text-muted-foreground font-mono">{page.pageId}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              page.isActive
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-destructive/10 text-destructive'
+                            }`}
+                          >
+                            {page.isActive ? t('pages.active') : t('pages.inactive')}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full"
+                            onClick={() => navigate(`/pages/${page.pageId}`)}
+                          >
+                            {t('pages.configure')}
+                            <ArrowIcon className="h-3 w-3 ms-1" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            page.isActive
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {page.isActive ? t('pages.active') : t('pages.inactive')}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/pages/${page.pageId}`)}
-                        >
-                          {t('pages.configure')}
-                        </Button>
-                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+                      <FileText className="h-7 w-7 text-primary" />
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-slate-500 mb-4">{t('pages.noPages')}</p>
-                  <Button onClick={() => navigate('/pages')}>{t('pages.connectNew')}</Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <p className="text-muted-foreground mb-4">{t('pages.noPages')}</p>
+                    <Button className="btn-brand" onClick={() => navigate('/pages')}>
+                      {t('pages.connectNew')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{t('dashboard.quickActions')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                className="w-full"
-                onClick={() => navigate('/pages')}
-              >
-                {t('pages.connectNew')}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/conversations')}
-              >
-                {t('conversations.title')}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/analytics')}
-              >
-                {t('analytics.title')}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/settings')}
-              >
-                {t('settings.title')}
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="card-brand p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">{t('dashboard.quickActions')}</h2>
+            <div className="space-y-3">
+              {quickActions.map((action, i) => {
+                const Icon = action.icon;
+                return (
+                  <Button
+                    key={i}
+                    variant={action.primary ? 'default' : 'outline'}
+                    className={`w-full justify-start h-12 rounded-xl ${action.primary ? 'btn-brand' : ''}`}
+                    onClick={() => navigate(action.path)}
+                  >
+                    <Icon className="h-4 w-4 me-3" />
+                    {action.label}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>

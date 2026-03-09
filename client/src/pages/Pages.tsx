@@ -37,12 +37,12 @@ export default function Pages() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8" dir={dir}>
+    <div className="min-h-screen bg-background p-6 sm:p-8" dir={dir}>
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
         <Button
           variant="ghost"
-          className="mb-6"
+          className="mb-6 text-primary hover:text-primary/80"
           onClick={() => navigate('/dashboard')}
         >
           <BackArrow className="w-4 h-4 me-2" />
@@ -50,10 +50,10 @@ export default function Pages() {
         </Button>
 
         {/* Header + Connect Button inline */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">{t.title}</h1>
-            <p className="text-slate-600">{t.subtitle}</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t.title}</h1>
+            <p className="text-muted-foreground">{t.subtitle}</p>
           </div>
           <FacebookOAuthButton
             onSuccess={() => {

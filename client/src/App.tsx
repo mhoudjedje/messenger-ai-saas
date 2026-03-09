@@ -16,6 +16,7 @@ import OAuthCallback from "./pages/OAuthCallback";
 import { LoginPage } from "./pages/Auth/Login";
 import { SignupPage } from "./pages/Auth/Signup";
 import { VerifyOTPPage } from "./pages/Auth/VerifyOTP";
+import Premium from "./pages/Premium";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/auth/login"} component={LoginPage} />
       <Route path={"/auth/signup"} component={SignupPage} />
       <Route path={"/auth/verify-otp"} component={VerifyOTPPage} />
+      <Route path={"/premium"} component={Premium} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/pages"} component={Pages} />
       <Route path={"/oauth-callback"} component={OAuthCallback} />

@@ -25,17 +25,17 @@
 - [ ] Valider redirect URI dans Meta App Console
 
 ### Design System Moderne & Épuré
-- [ ] Appliquer skill-design-system-modern-clean (WhatsApp-inspired)
-- [ ] Implémenter Tailwind 4 avec OKLCH colors
-- [ ] Créer composants : Buttons (pill-shaped), Cards, Chat bubbles
-- [ ] Support RTL complet pour Arabe
-- [ ] Icônes filaires + emojis
-- [ ] Typographie moderne (sans-serif)
+- [x] Appliquer skill-design-system-modern-clean (WhatsApp-inspired)
+- [x] Implémenter Tailwind 4 avec OKLCH colors
+- [x] Créer composants : Buttons (pill-shaped), Cards, Chat bubbles
+- [x] Support RTL complet pour Arabe
+- [x] Icônes filaires + emojis
+- [x] Typographie moderne (sans-serif)
 
 ### Refonte UI
-- [ ] Refaire page d'accueil (landing page premium)
-- [ ] Refaire dashboard avec nouveau design
-- [ ] Refaire pages Auth avec design moderne
+- [x] Refaire page d'accueil (landing page premium)
+- [x] Refaire dashboard avec nouveau design
+- [x] Refaire pages Auth avec design moderne
 - [ ] Tester sur mobile (responsive)
 
 ---
@@ -241,11 +241,11 @@
 - [ ] Afficher le formulaire de paiement Stripe dans le tunnel premium
 
 ### Tunnel Premium & Paywall
-- [ ] Créer page /premium avec les plans d'abonnement
-- [ ] Implémenter logique : utilisateurs non payants → redirect vers /premium
-- [ ] Créer composant de sélection de plan (Algérie vs International)
-- [ ] Créer bouton "Passer au Premium" pour chaque plan
-- [ ] Afficher le statut d'abonnement dans le dashboard
+- [x] Créer page /premium avec les plans d'abonnement
+- [x] Implémenter logique : utilisateurs non payants → redirect vers /premium
+- [x] Créer composant de sélection de plan (Algérie vs International)
+- [x] Créer bouton "Passer au Premium" pour chaque plan
+- [x] Afficher le statut d'abonnement dans le dashboard
 
 ### Wizard d'Onboarding Post-Paiement
 - [ ] Créer page /onboarding après paiement réussi
@@ -271,3 +271,46 @@
 - [x] Simplifier le flux : 1 seul bouton pour connecter une page (pas popup dialog + bouton)
 - [x] Ajouter des boutons retour dans toutes les pages du dashboard (Conversations, Analytics, Settings, Pages, AgentConfig)
 - [x] Corriger le titre Quick Actions dans le Dashboard (était 'common.close' au lieu de 'dashboard.quickActions')
+
+## PHASE 1 (Suite) : Design System & Refonte UI
+
+### Design System Modern & Clean (skill-design-system-modern-clean)
+- [x] Configurer Google Fonts (Inter + Noto Sans Arabic) dans index.html
+- [x] Mettre à jour index.css avec nouvelles variables OKLCH (couleurs de marque AITeam)
+- [x] Définir palette : fond clair, sections sombres #111B21, accent teal/vert
+- [x] Appliquer border-radius généreux (pill-shaped buttons, 16-24px cards)
+- [x] Support RTL natif complet
+
+### Refonte Landing Page
+- [x] Redesign Home.tsx avec style premium WhatsApp-inspired
+- [x] Section Hero asymétrique avec mockup téléphone
+- [x] Section features avec icônes filaires
+- [x] CTA vers inscription/connexion
+- [x] Branding AITeam (pas "Messenger AI")
+
+### Refonte Pages Auth
+- [x] Redesign Login.tsx avec nouveau design system
+- [x] Redesign Signup.tsx avec nouveau design system
+- [x] Redesign VerifyOTP.tsx avec nouveau design system
+
+## PHASE 2 (Suite) : Tunnel Premium & Paywall
+
+### Page Premium (/premium)
+- [x] Créer page de sélection de plan avec pricing cards
+- [x] Plans : Pro (2999 DZD/mois) et Enterprise (9999 DZD/mois)
+- [ ] Détection automatique Algérie vs International (à implémenter - géolocalisation)
+- [x] Bouton paiement Chargily (Edahabia/CIB) pour Algérie
+- [x] Bouton paiement Stripe pour International
+- [x] Support RTL complet
+
+### Paywall Logic
+- [x] Implémenter redirection non-payants vers /premium
+- [x] Vérifier subscription status dans Dashboard
+- [x] Afficher statut abonnement dans le dashboard
+- [x] Créer hook useSubscription pour vérification centralisée
+
+### Redesign Dashboard
+- [x] Appliquer nouveau design system au Dashboard
+- [x] Navigation top nav cohérente avec branding AITeam
+- [x] Stats cards avec nouveau style
+- [x] Redesign Conversations, Analytics, Settings, Pages avec nouveau design system

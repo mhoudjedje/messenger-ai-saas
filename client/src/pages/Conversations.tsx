@@ -1,11 +1,10 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trpc } from '@/lib/trpc';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Search, MessageSquare, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { arSA, fr, enUS } from 'date-fns/locale';
 
@@ -29,12 +28,12 @@ export default function Conversations() {
   const BackArrow = language === 'ar' ? ArrowRight : ArrowLeft;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8" dir={dir}>
+    <div className="min-h-screen bg-background p-6 sm:p-8" dir={dir}>
       <div className="max-w-6xl mx-auto">
         {/* Back Button */}
         <Button
           variant="ghost"
-          className="mb-6"
+          className="mb-6 text-primary hover:text-primary/80"
           onClick={() => navigate('/dashboard')}
         >
           <BackArrow className="w-4 h-4 me-2" />
@@ -43,71 +42,82 @@ export default function Conversations() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('conversations.title')}</h1>
-          <p className="text-slate-600">{t('conversations.noConversations')}</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('conversations.title')}</h1>
+          <p className="text-muted-foreground">
+            {language === 'ar' ? 'تتبع جميع المحادثات مع عملائك' :
+             language === 'fr' ? 'Suivez toutes les conversations avec vos clients' :
+             'Track all conversations with your customers'}
+          </p>
         </div>
 
         {/* Search */}
-        <div className="mb-6">
+        <div className="relative mb-6 max-w-md">
+          <Search className="absolute start-3 top-3 w-5 h-5 text-muted-foreground" />
           <Input
             placeholder={t('conversations.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
+            className="ps-10 h-12 rounded-xl bg-secondary/50 border-border/50 focus:bg-background"
           />
         </div>
 
         {/* Conversations List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('conversations.title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="card-brand overflow-hidden">
+          <div className="p-6 border-b border-border/50">
+            <h2 className="text-lg font-semibold text-foreground">{t('conversations.title')}</h2>
+          </div>
+          <div className="p-4">
             {isLoading ? (
-              <div className="text-center py-8">{t('common.loading')}</div>
+              <div className="text-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+              </div>
             ) : filteredConversations.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {filteredConversations.map((conversation) => (
                   <div
                     key={conversation.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 rounded-xl hover:bg-secondary/30 transition-colors cursor-pointer"
                     onClick={() => navigate(`/conversations/${conversation.id}`)}
                   >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">
-                        {conversation.senderName || 'Unknown'}
-                      </h3>
-                      <p className="text-sm text-slate-500">
-                        {t('conversations.messageCount')}: {conversation.messageCount}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {t('conversations.lastMessage')}:{' '}
-                        {conversation.lastMessageAt
-                          ? formatDistanceToNow(new Date(conversation.lastMessageAt), {
-                              addSuffix: true,
-                              locale: dateLocale,
-                            })
-                          : 'N/A'}
-                      </p>
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-foreground">
+                          {conversation.senderName || 'Unknown'}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {t('conversations.messageCount')}: {conversation.messageCount}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {conversation.lastMessageAt
+                            ? formatDistanceToNow(new Date(conversation.lastMessageAt), {
+                                addSuffix: true,
+                                locale: dateLocale,
+                              })
+                            : 'N/A'}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                         {conversation.senderLanguage?.toUpperCase()}
                       </span>
-                      <Button variant="outline" size="sm">
-                        {t('conversations.view')}
-                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-slate-500">{t('conversations.noConversations')}</p>
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+                  <MessageSquare className="h-7 w-7 text-primary" />
+                </div>
+                <p className="text-muted-foreground">{t('conversations.noConversations')}</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
