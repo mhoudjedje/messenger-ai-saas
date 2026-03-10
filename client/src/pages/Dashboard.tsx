@@ -109,10 +109,13 @@ export default function Dashboard() {
       <nav className="sticky top-0 z-50 glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
               <img src={LOGO_IMG} alt="AITeam" className="h-8 w-8" />
               <span className="text-lg font-bold text-foreground">{t('landing.brand')}</span>
-            </div>
+            </button>
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {user.name || user.email}

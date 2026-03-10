@@ -49,7 +49,9 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo & Header */}
         <div className="text-center mb-10">
-          <img src={LOGO_IMG} alt="AITeam" className="h-16 w-16 mx-auto mb-4" />
+          <a href="/" className="inline-block hover:opacity-80 transition-opacity">
+            <img src={LOGO_IMG} alt="AITeam" className="h-16 w-16 mx-auto mb-4" />
+          </a>
           <h1 className="text-3xl font-bold text-foreground mb-2">{t('landing.brand')}</h1>
           <p className="text-muted-foreground">{t('landing.login')}</p>
         </div>

@@ -314,3 +314,12 @@
 - [x] Navigation top nav cohérente avec branding AITeam
 - [x] Stats cards avec nouveau style
 - [x] Redesign Conversations, Analytics, Settings, Pages avec nouveau design system
+
+
+## PHASE 3 (Suite) : Navigation & UX Improvements
+
+### Landing Page & Logo Navigation
+- [x] Fix landing page display issue (landing page works correctly - redirects to /premium for unauthenticated users)
+- [x] Add clickable logo navigation to all pages (Auth, Dashboard, Premium, Conversations, Analytics, Settings, Pages)
+- [x] Logo on landing page should be clickable (scrolls to top on landing page)
+- [x] Logo on all other pages should redirect to landing page (/)

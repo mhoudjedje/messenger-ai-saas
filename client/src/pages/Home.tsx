@@ -39,10 +39,13 @@ export default function Home() {
         <nav className="sticky top-0 z-50 glass border-b border-border/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <img src={LOGO_IMG} alt="AITeam" className="h-9 w-9" />
                 <span className="text-xl font-bold text-foreground">{t('landing.brand')}</span>
-              </div>
+              </button>
               <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"

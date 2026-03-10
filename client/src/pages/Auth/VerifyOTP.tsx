@@ -94,9 +94,9 @@ export function VerifyOTPPage() {
 
         {/* Logo & Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+          <a href="/" className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4 hover:opacity-80 transition-opacity">
             <ShieldCheck className="w-8 h-8 text-primary" />
-          </div>
+          </a>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {language === 'ar' ? 'التحقق من البريد الإلكتروني' : language === 'fr' ? 'Vérification email' : 'Email Verification'}
           </h1>

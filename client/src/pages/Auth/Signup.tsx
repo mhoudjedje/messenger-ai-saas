@@ -58,7 +58,9 @@ export function SignupPage() {
 
         {/* Logo & Header */}
         <div className="text-center mb-10">
-          <img src={LOGO_IMG} alt="AITeam" className="h-16 w-16 mx-auto mb-4" />
+          <a href="/" className="inline-block hover:opacity-80 transition-opacity">
+            <img src={LOGO_IMG} alt="AITeam" className="h-16 w-16 mx-auto mb-4" />
+          </a>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {language === 'ar' ? 'إنشاء حساب جديد' : language === 'fr' ? 'Créer un compte' : 'Create Account'}
           </h1>
