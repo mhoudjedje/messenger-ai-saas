@@ -29,11 +29,8 @@ export default function Premium() {
     { enabled: isAuthenticated }
   );
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth/login');
-    }
-  }, [authLoading, isAuthenticated, navigate]);
+  // Note: Premium page is accessible to both authenticated and unauthenticated users
+  // Unauthenticated users can view pricing and will be prompted to log in before payment
 
   // If user already has active subscription, redirect to dashboard
   useEffect(() => {
@@ -121,7 +118,7 @@ export default function Premium() {
     }
   };
 
-  if (authLoading || subLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -166,7 +163,7 @@ export default function Premium() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <img src={LOGO_IMG} alt="AITeam" className="h-9 w-9" />
@@ -174,7 +171,7 @@ export default function Premium() {
             </button>
             <Button
               variant="ghost"
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="text-muted-foreground"
             >
               <BackArrow className="h-4 w-4 me-2" />

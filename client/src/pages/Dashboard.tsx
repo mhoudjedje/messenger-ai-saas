@@ -110,7 +110,14 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => {
+                // If user has subscription, go to dashboard, otherwise go to home
+                if (user && hasAccess) {
+                  window.location.href = '/dashboard';
+                } else {
+                  window.location.href = '/';
+                }
+              }}
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <img src={LOGO_IMG} alt="AITeam" className="h-8 w-8" />

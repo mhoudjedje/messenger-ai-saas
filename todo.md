@@ -323,3 +323,5 @@
 - [x] Add clickable logo navigation to all pages (Auth, Dashboard, Premium, Conversations, Analytics, Settings, Pages)
 - [x] Logo on landing page should be clickable (scrolls to top on landing page)
 - [x] Logo on all other pages should redirect to landing page (/)
+- [x] Fix logo redirect loop - Home page now shows landing page for both authenticated and unauthenticated users
+- [x] Authenticated users see "Dashboard" button instead of "Sign Up" on landing page
