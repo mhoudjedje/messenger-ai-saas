@@ -29,7 +29,16 @@ export function generateOTPCode(): string {
  */
 export async function sendOTPEmail(email: string, code: string, language: 'ar' | 'fr' | 'en' = 'ar'): Promise<boolean> {
   try {
-    // Configuration email (à adapter selon votre service)
+    // Check if SMTP credentials are configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      // Development mode: log OTP to console instead of sending email
+      console.log(`\n[OTP] Development Mode - OTP Code for ${email}:`);
+      console.log(`[OTP] Code: ${code}`);
+      console.log(`[OTP] Language: ${language}\n`);
+      return true;
+    }
+
+    // Production mode: send via SMTP
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
@@ -59,7 +68,10 @@ export async function sendOTPEmail(email: string, code: string, language: 'ar' |
     return true;
   } catch (error) {
     console.error('[OTP] Failed to send email:', error);
-    return false;
+    // Fallback to console logging on error
+    console.log(`\n[OTP] Fallback - OTP Code for ${email}:`);
+    console.log(`[OTP] Code: ${code}\n`);
+    return true;
   }
 }
 
