@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcrypt';
 import { ENV } from './env';
+import { SignJWT, jwtVerify } from 'jose';
 
 /**
  * Aiteam Authentication Helpers
@@ -49,124 +50,108 @@ export async function sendOTPEmail(email: string, code: string, language: 'ar' |
       },
     });
 
-    const subject = language === 'ar' 
-      ? 'رمز التحقق من Aiteam' 
-      : language === 'fr'
-      ? 'Code de vérification Aiteam'
-      : 'Aiteam Verification Code';
-
-    const htmlContent = getOTPEmailTemplate(code, language);
+    const subject = language === 'ar' ? 'رمز التحقق' : language === 'fr' ? 'Code de vérification' : 'Verification Code';
+    const body = language === 'ar' 
+      ? `رمز التحقق الخاص بك: ${code}` 
+      : language === 'fr' 
+      ? `Votre code de vérification: ${code}` 
+      : `Your verification code: ${code}`;
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'noreply@aiteam.app',
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject,
-      html: htmlContent,
+      html: `<p>${body}</p><p style="color: #999; font-size: 12px;">This code expires in 10 minutes.</p>`,
     });
 
-    console.log(`[OTP] Email sent to ${email}`);
+    console.log(`[OTP] Email sent successfully to ${email}`);
     return true;
   } catch (error) {
     console.error('[OTP] Failed to send email:', error);
-    // Fallback to console logging on error
-    console.log(`\n[OTP] Fallback - OTP Code for ${email}:`);
-    console.log(`[OTP] Code: ${code}\n`);
-    return true;
+    return false;
   }
-}
-
-/**
- * Template HTML pour l'email OTP
- */
-function getOTPEmailTemplate(code: string, language: 'ar' | 'fr' | 'en'): string {
-  const templates = {
-    ar: `
-      <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #f5f5f5; padding: 20px;">
-        <div style="max-width: 400px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h2 style="color: #333; margin-bottom: 20px;">رمز التحقق من Aiteam</h2>
-          <p style="color: #666; margin-bottom: 20px;">مرحبا بك في Aiteam! استخدم الرمز أدناه للتحقق من حسابك:</p>
-          <div style="background-color: #f0f0f0; border-radius: 4px; padding: 15px; text-align: center; margin: 20px 0;">
-            <p style="font-size: 32px; font-weight: bold; color: #007bff; letter-spacing: 5px; margin: 0;">${code}</p>
-          </div>
-          <p style="color: #999; font-size: 12px;">ينتهي صلاحية هذا الرمز خلال 10 دقائق.</p>
-        </div>
-      </div>
-    `,
-    fr: `
-      <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
-        <div style="max-width: 400px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h2 style="color: #333; margin-bottom: 20px;">Code de vérification Aiteam</h2>
-          <p style="color: #666; margin-bottom: 20px;">Bienvenue sur Aiteam! Utilisez le code ci-dessous pour vérifier votre compte:</p>
-          <div style="background-color: #f0f0f0; border-radius: 4px; padding: 15px; text-align: center; margin: 20px 0;">
-            <p style="font-size: 32px; font-weight: bold; color: #007bff; letter-spacing: 5px; margin: 0;">${code}</p>
-          </div>
-          <p style="color: #999; font-size: 12px;">Ce code expire dans 10 minutes.</p>
-        </div>
-      </div>
-    `,
-    en: `
-      <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
-        <div style="max-width: 400px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h2 style="color: #333; margin-bottom: 20px;">Aiteam Verification Code</h2>
-          <p style="color: #666; margin-bottom: 20px;">Welcome to Aiteam! Use the code below to verify your account:</p>
-          <div style="background-color: #f0f0f0; border-radius: 4px; padding: 15px; text-align: center; margin: 20px 0;">
-            <p style="font-size: 32px; font-weight: bold; color: #007bff; letter-spacing: 5px; margin: 0;">${code}</p>
-          </div>
-          <p style="color: #999; font-size: 12px;">This code expires in 10 minutes.</p>
-        </div>
-      </div>
-    `,
-  };
-  return templates[language];
 }
 
 // ============ PASSWORD HASHING ============
 
 /**
- * Hasher un mot de passe
+ * Hash a password using bcrypt
  */
 export async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
+  return bcrypt.hash(password, 10);
 }
 
 /**
- * Vérifier un mot de passe
+ * Compare a password with its hash
  */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
+}
+
+// ============ SESSION TOKEN (JWT) ============
+
+/**
+ * Générer un token de session JWT (compatible avec Manus SDK)
+ */
+export async function generateSessionToken(userId: number, expiresInMs: number = 1000 * 60 * 60 * 24 * 30, name: string = 'User'): Promise<string> {
+  const secretKey = new TextEncoder().encode(ENV.cookieSecret || 'dev-secret');
+  const expirationSeconds = Math.floor((Date.now() + expiresInMs) / 1000);
+
+  // Ensure name is non-empty (required by SDK verification)
+  const userName = name && name.trim().length > 0 ? name : 'User';
+
+  return new SignJWT({
+    userId,
+    openId: `aiteam_${userId}`,
+    appId: ENV.appId || 'aiteam',
+    name: userName,
+  })
+    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+    .setExpirationTime(expirationSeconds)
+    .sign(secretKey);
+}
+
+/**
+ * Vérifier un token de session JWT (compatible avec Manus SDK)
+ */
+export async function verifySessionToken(token: string): Promise<{ userId: number; iat: number; exp: number } | null> {
+  try {
+    const secretKey = new TextEncoder().encode(ENV.cookieSecret || 'dev-secret');
+    const { payload } = await jwtVerify(token, secretKey, {
+      algorithms: ['HS256'],
+    });
+
+    console.log('[Session] JWT payload:', JSON.stringify(payload, null, 2));
+
+    const userId = payload.userId as number;
+    const iat = payload.iat as number;
+    const exp = payload.exp as number;
+
+    console.log('[Session] Extracted fields - userId:', userId, 'iat:', iat, 'exp:', exp);
+
+    if (!userId || !iat || !exp) {
+      console.warn('[Session] JWT payload missing required fields', { userId, iat, exp });
+      return null;
+    }
+
+    // Vérifier l'expiration
+    if (exp < Math.floor(Date.now() / 1000)) {
+      console.warn('[Session] JWT token expired');
+      return null;
+    }
+
+    console.log('[Session] JWT token verified successfully for userId:', userId);
+    return { userId, iat, exp };
+  } catch (error) {
+    console.error('[Session] Failed to verify JWT token:', error);
+    return null;
+  }
 }
 
 // ============ GOOGLE OAUTH ============
 
-export interface GoogleOAuthConfig {
-  clientId: string;
-  clientSecret?: string;
-  redirectUri: string;
-}
-
 /**
- * Générer l'URL de connexion Google OAuth
- */
-export function generateGoogleOAuthUrl(redirectUri: string, state: string): string {
-  const clientId = ENV.googleOAuthClientId;
-  const scope = 'openid profile email';
-  
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope,
-    state,
-    access_type: 'offline',
-    prompt: 'consent',
-  });
-
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-}
-
-/**
- * Échanger un code Google OAuth pour un token
+ * Exchange Google authorization code for access token
  */
 export async function exchangeGoogleCodeForToken(code: string, redirectUri: string): Promise<{
   access_token: string;
@@ -190,10 +175,11 @@ export async function exchangeGoogleCodeForToken(code: string, redirectUri: stri
     });
 
     if (!response.ok) {
-      throw new Error(`Google OAuth token exchange failed: ${response.statusText}`);
+      const error = await response.text();
+      throw new Error(`Google token exchange failed: ${response.status} - ${error}`);
     }
 
-    return await response.json();
+    return response.json();
   } catch (error) {
     console.error('[Google OAuth] Token exchange failed:', error);
     throw error;
@@ -201,7 +187,7 @@ export async function exchangeGoogleCodeForToken(code: string, redirectUri: stri
 }
 
 /**
- * Récupérer les informations utilisateur Google
+ * Get user info from Google using access token
  */
 export async function getGoogleUserInfo(accessToken: string): Promise<{
   id: string;
@@ -212,68 +198,44 @@ export async function getGoogleUserInfo(accessToken: string): Promise<{
   try {
     const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch Google user info: ${response.statusText}`);
+      throw new Error(`Failed to get Google user info: ${response.status}`);
     }
 
-    return await response.json();
+    return response.json();
   } catch (error) {
-    console.error('[Google OAuth] Failed to fetch user info:', error);
+    console.error('[Google OAuth] Failed to get user info:', error);
     throw error;
   }
 }
 
-// ============ SESSION TOKENS ============
 
 /**
- * Générer un token de session JWT simple
+ * Verify a password against its hash (alias for comparePassword)
  */
-export function generateSessionToken(userId: number, expiresInMs: number = 1000 * 60 * 60 * 24 * 30): string {
-  const payload = {
-    userId,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor((Date.now() + expiresInMs) / 1000),
-  };
-
-  // Signature simple (à remplacer par JWT proper en production)
-  const signature = crypto
-    .createHmac('sha256', process.env.JWT_SECRET || 'dev-secret')
-    .update(JSON.stringify(payload))
-    .digest('hex');
-
-  return Buffer.from(JSON.stringify(payload)).toString('base64') + '.' + signature;
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return comparePassword(password, hash);
 }
 
 /**
- * Vérifier un token de session
+ * Generate Google OAuth URL for authorization
  */
-export function verifySessionToken(token: string): { userId: number; iat: number; exp: number } | null {
-  try {
-    const [payloadB64, signature] = token.split('.');
-    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString());
+export function generateGoogleOAuthUrl(redirectUri: string, state?: string): string {
+  const params = new URLSearchParams({
+    client_id: ENV.googleOAuthClientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    access_type: 'offline',
+  });
 
-    // Vérifier la signature
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.JWT_SECRET || 'dev-secret')
-      .update(JSON.stringify(payload))
-      .digest('hex');
-
-    if (signature !== expectedSignature) {
-      return null;
-    }
-
-    // Vérifier l'expiration
-    if (payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-
-    return payload;
-  } catch (error) {
-    console.error('[Session] Failed to verify token:', error);
-    return null;
+  if (state) {
+    params.append('state', state);
   }
+
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }

@@ -15,8 +15,7 @@ import {
 } from './aiteam-auth';
 import { ENV } from './env';
 import { getSessionCookieOptions } from './cookies';
-
-const COOKIE_NAME = 'aiteam_session';
+import { COOKIE_NAME } from '../../shared/const';
 const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -147,18 +146,28 @@ export function registerAiteamAuthRoutes(app: Express) {
           .where(eq(users.id, userId));
       } else {
         // Créer un nouvel utilisateur
-        const result = await db.insert(users).values({
+        await db.insert(users).values({
           email,
           name: name || null,
           provider: 'email',
           isVerified: true,
           lastSignedIn: new Date(),
         });
-        userId = (result as any).insertId;
+        // Query the user back to get the ID
+        const newUser = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+        if (newUser.length === 0) {
+          return res.status(500).json({ error: 'Failed to create user' });
+        }
+        userId = newUser[0].id!;
       }
 
       // Créer un token de session
-      const sessionToken = generateSessionToken(userId, SESSION_EXPIRY_MS);
+      const userName = existingUser.length > 0 ? (existingUser[0].name || email) : (name || email);
+      const sessionToken = await generateSessionToken(userId, SESSION_EXPIRY_MS, userName);
 
       // Définir le cookie de session
       const cookieOptions = getSessionCookieOptions(req);
@@ -261,27 +270,45 @@ export function registerAiteamAuthRoutes(app: Express) {
           .where(eq(users.id, userId));
       } else {
         // Créer un nouvel utilisateur
-        const result = await db.insert(users).values({
+        await db.insert(users).values({
           email: googleUser.email,
           name: googleUser.name || null,
           provider: 'google',
           isVerified: true,
           lastSignedIn: new Date(),
         });
-        userId = (result as any).insertId;
+        // Query the user back to get the ID
+        const newUser = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, googleUser.email))
+          .limit(1);
+        if (newUser.length === 0) {
+          return res.status(500).json({ error: 'Failed to create user' });
+        }
+        userId = newUser[0].id!;
       }
 
       // Créer un token de session
-      const sessionToken = generateSessionToken(userId, SESSION_EXPIRY_MS);
+      const userName = existingUser.length > 0 ? (existingUser[0].name || googleUser.email) : (googleUser.name || googleUser.email);
+      const sessionToken = await generateSessionToken(userId, SESSION_EXPIRY_MS, userName);
 
       // Définir le cookie de session
       const cookieOptions = getSessionCookieOptions(req);
+      console.log('[Auth] Setting session cookie with options:', {
+        ...cookieOptions,
+        maxAge: SESSION_EXPIRY_MS,
+        protocol: req.protocol,
+        host: req.get('host'),
+        xForwardedProto: req.headers['x-forwarded-proto'],
+      });
       res.cookie(COOKIE_NAME, sessionToken, {
         ...cookieOptions,
         maxAge: SESSION_EXPIRY_MS,
       });
 
       console.log(`[Auth] User ${userId} authenticated via Google`);
+      console.log('[Auth] Redirecting to /dashboard?auth_success=true');
       res.redirect('/dashboard?auth_success=true');
     } catch (error) {
       console.error('[Auth] Error in Google callback:', error);

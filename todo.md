@@ -11,6 +11,7 @@
 - [x] Créer pages Auth : Login, Signup, OTP Verification (UI React) - design moderne RTL
 - [x] Routes de navigation intégrées dans App.tsx
 - [x] Tests unitaires pour authentification (9 tests, tous passants)
+- [x] FIX: Session persistence - JWT userId extraction from insert result
 - [ ] Implémenter Meta Cloud API OTP WhatsApp (Algérie)
 - [ ] Supprimer Manus Auth, utiliser Aiteam Auth custom (en production)
 
@@ -325,3 +326,17 @@
 - [x] Logo on all other pages should redirect to landing page (/)
 - [x] Fix logo redirect loop - Home page now shows landing page for both authenticated and unauthenticated users
 - [x] Authenticated users see "Dashboard" button instead of "Sign Up" on landing page
+
+
+## PHASE 4 : Debugging & Fixes
+
+### Google OAuth Tunnel Issue
+- [ ] Fix Google OAuth redirect_uri_mismatch error when using Cloudflare tunnel
+  - Issue: Google Cloud Console has redirect URI configured for Manus domain or localhost, but tunnel URL is different
+  - Error: "Accès bloqué: la demande de cette appli n'est pas valide" (400: redirect_uri_mismatch)
+  - Solution: Add tunnel URL to Google Cloud Console authorized redirect URIs
+  - Steps:
+    1. Go to Google Cloud Console → OAuth 2.0 Client IDs
+    2. Edit the AITeam app credentials
+    3. Add `https://receipt-will-also-chicago.trycloudflare.com/api/auth/google/callback` to Authorized redirect URIs
+    4. Save and test again
