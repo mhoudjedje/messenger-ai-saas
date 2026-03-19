@@ -11,11 +11,11 @@ import {
   generateGoogleOAuthUrl,
   exchangeGoogleCodeForToken,
   getGoogleUserInfo,
-  generateSessionToken,
 } from './aiteam-auth';
 import { ENV } from './env';
 import { getSessionCookieOptions } from './cookies';
 import { COOKIE_NAME } from '../../shared/const';
+import { sessionStore } from './session-store';
 const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -152,6 +152,7 @@ export function registerAiteamAuthRoutes(app: Express) {
           provider: 'email',
           isVerified: true,
           lastSignedIn: new Date(),
+          subscriptionStatus: 'pro', // TEMPORARY: Set to 'pro' for testing
         });
         // Query the user back to get the ID
         const newUser = await db
@@ -165,16 +166,29 @@ export function registerAiteamAuthRoutes(app: Express) {
         userId = newUser[0].id!;
       }
 
-      // Créer un token de session
+
+      // Créer une session serveur
       const userName = existingUser.length > 0 ? (existingUser[0].name || email) : (name || email);
-      const sessionToken = await generateSessionToken(userId, SESSION_EXPIRY_MS, userName);
+      const sessionId = nanoid(32);
+      sessionStore.createSession(sessionId, userId, email, userName, SESSION_EXPIRY_MS);
 
       // Définir le cookie de session
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, {
+      res.cookie(COOKIE_NAME, sessionId, {
         ...cookieOptions,
         maxAge: SESSION_EXPIRY_MS,
       });
+
+      console.log(`[Auth] User ${userId} authenticated via email OTP, session: ${sessionId}`);
+
+
+
+
+
+
+
+
+
 
       console.log(`[Auth] User ${userId} authenticated via email OTP`);
       res.json({ success: true, userId, message: 'Authenticated' });
@@ -276,6 +290,7 @@ export function registerAiteamAuthRoutes(app: Express) {
           provider: 'google',
           isVerified: true,
           lastSignedIn: new Date(),
+          subscriptionStatus: 'pro', // TEMPORARY: Set to 'pro' for testing
         });
         // Query the user back to get the ID
         const newUser = await db
@@ -289,9 +304,10 @@ export function registerAiteamAuthRoutes(app: Express) {
         userId = newUser[0].id!;
       }
 
-      // Créer un token de session
+      // Créer une session serveur
       const userName = existingUser.length > 0 ? (existingUser[0].name || googleUser.email) : (googleUser.name || googleUser.email);
-      const sessionToken = await generateSessionToken(userId, SESSION_EXPIRY_MS, userName);
+      const sessionId = nanoid(32);
+      sessionStore.createSession(sessionId, userId, googleUser.email, userName, SESSION_EXPIRY_MS);
 
       // Définir le cookie de session
       const cookieOptions = getSessionCookieOptions(req);
@@ -302,7 +318,7 @@ export function registerAiteamAuthRoutes(app: Express) {
         host: req.get('host'),
         xForwardedProto: req.headers['x-forwarded-proto'],
       });
-      res.cookie(COOKIE_NAME, sessionToken, {
+      res.cookie(COOKIE_NAME, sessionId, {
         ...cookieOptions,
         maxAge: SESSION_EXPIRY_MS,
       });
@@ -326,5 +342,182 @@ export function registerAiteamAuthRoutes(app: Express) {
     res.clearCookie(COOKIE_NAME);
     console.log('[Auth] User logged out');
     res.json({ success: true, message: 'Logged out' });
+  });
+
+  // ============ TEST BYPASS ============
+
+  /**
+   * GET /api/auth/test-bypass
+   * Route de bypass pour les tests - crée/récupère un utilisateur de test et redirige vers le dashboard
+   * TEMPORARY: À supprimer en production
+   */
+  app.get('/api/auth/test-bypass', async (req: Request, res: Response) => {
+    try {
+      const testEmail = 'test@example.com';
+      const testName = 'Test User';
+
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: 'Database not available' });
+      }
+
+      // Chercher l'utilisateur de test
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, testEmail))
+        .limit(1);
+
+      let userId: number;
+
+      if (existingUser.length > 0) {
+        userId = existingUser[0].id!;
+        console.log(`[Auth] Test user already exists: ${userId}`);
+      } else {
+        // Créer l'utilisateur de test
+        await db.insert(users).values({
+          email: testEmail,
+          name: testName,
+          provider: 'email', // Use 'email' as provider for test user
+          isVerified: true,
+          lastSignedIn: new Date(),
+          subscriptionStatus: 'pro', // Accès complet pour les tests
+        });
+
+        // Récupérer l'utilisateur créé
+        const newUser = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, testEmail))
+          .limit(1);
+
+        if (newUser.length === 0) {
+          return res.status(500).json({ error: 'Failed to create test user' });
+        }
+
+        userId = newUser[0].id!;
+        console.log(`[Auth] Test user created: ${userId}`);
+      }
+
+      // Créer une session serveur
+      const sessionId = nanoid(32);
+      sessionStore.createSession(sessionId, userId, testEmail, testName, SESSION_EXPIRY_MS);
+
+      // Définir le cookie de session avec les options appropriées
+      const cookieOptions = getSessionCookieOptions(req);
+      res.cookie(COOKIE_NAME, sessionId, {
+        ...cookieOptions,
+        maxAge: SESSION_EXPIRY_MS,
+      });
+
+      console.log(`[Auth] Test bypass: User ${userId} authenticated, session: ${sessionId}, redirecting to /dashboard`);
+
+
+
+
+
+
+
+
+
+
+      console.log(`[Auth] Test bypass: User ${userId} authenticated, redirecting to /dashboard`);
+      res.redirect('/dashboard?test_mode=true');
+    } catch (error) {
+      console.error('[Auth] Error in test bypass:', error);
+      res.status(500).json({ error: 'Failed to create test session' });
+    }
+  });
+
+  // ============ DEBUG ============
+
+  /**
+   * GET /api/debug/cookies
+   * Endpoint de debug pour vérifier les cookies reçus
+   */
+  app.get('/api/debug/cookies', (req: Request, res: Response) => {
+    res.json({
+      headers: {
+        cookie: req.headers.cookie || 'NO COOKIE HEADER',
+        'x-forwarded-proto': req.headers['x-forwarded-proto'] || 'NOT SET',
+        'x-forwarded-for': req.headers['x-forwarded-for'] || 'NOT SET',
+      },
+      protocol: req.protocol,
+      hostname: req.hostname,
+      url: req.url,
+    });
+  });
+
+  /**
+   * GET /api/debug/auth-test
+   * Endpoint de debug pour tester l'authentification directement
+   */
+  app.get('/api/debug/auth-test', async (req: Request, res: Response) => {
+    try {
+      const cookieModule = await import('cookie');
+      const parseCookieHeader = cookieModule.parse;
+      const authModule = await import('./aiteam-auth');
+      const constModule = await import('../../shared/const');
+      const dbModule = await import('../db');
+      const { verifySessionToken } = authModule;
+      const { COOKIE_NAME } = constModule;
+      const { getUserById } = dbModule;
+
+      const cookieHeader = req.headers.cookie;
+      console.log('[Debug] Cookie header:', cookieHeader ? 'present' : 'missing');
+
+      if (!cookieHeader) {
+        return res.json({ error: 'No cookie header' });
+      }
+
+      const cookies = parseCookieHeader(cookieHeader);
+      console.log('[Debug] Parsed cookies:', Object.keys(cookies));
+      const sessionToken = cookies[COOKIE_NAME];
+      console.log('[Debug] Session token found:', !!sessionToken);
+
+      if (!sessionToken) {
+        return res.json({ error: 'No session token' });
+      }
+
+      const payload = await verifySessionToken(sessionToken);
+      console.log('[Debug] Payload:', payload);
+
+      if (!payload || !payload.userId) {
+        return res.json({ error: 'Invalid payload', payload });
+      }
+
+      const user = await getUserById(payload.userId);
+      console.log('[Debug] User:', user);
+
+      res.json({
+        success: true,
+        userId: payload.userId,
+        user: user ? { id: user.id, email: user.email, name: user.name } : null,
+      });
+    } catch (error) {
+      console.error('[Debug] Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  /**
+   * GET /api/debug/jwt-verify?token=xxx
+   * Endpoint pour tester la vérification JWT directement
+   */
+  app.get('/api/debug/jwt-verify', async (req: Request, res: Response) => {
+    try {
+      const token = req.query.token as string;
+      if (!token) {
+        return res.json({ error: 'No token provided' });
+      }
+
+      const authModule = await import('./aiteam-auth');
+      const { verifySessionToken } = authModule;
+
+      const payload = await verifySessionToken(token);
+      res.json({ payload });
+    } catch (error) {
+      res.status(500).json({ error: String(error) });
+    }
   });
 }

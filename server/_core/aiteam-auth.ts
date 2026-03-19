@@ -116,10 +116,21 @@ export async function generateSessionToken(userId: number, expiresInMs: number =
  */
 export async function verifySessionToken(token: string): Promise<{ userId: number; iat: number; exp: number } | null> {
   try {
+    console.log('[Session] Verifying token with secret:', ENV.cookieSecret ? 'PRESENT' : 'MISSING');
+    console.log('[Session] Token length:', token.length);
     const secretKey = new TextEncoder().encode(ENV.cookieSecret || 'dev-secret');
-    const { payload } = await jwtVerify(token, secretKey, {
-      algorithms: ['HS256'],
-    });
+    console.log('[Session] Secret key length:', secretKey.length);
+    
+    let payload: any;
+    try {
+      const result = await jwtVerify(token, secretKey, {
+        algorithms: ['HS256'],
+      });
+      payload = result.payload;
+    } catch (jwtError) {
+      console.error('[Session] JWT verification failed:', jwtError instanceof Error ? jwtError.message : String(jwtError));
+      return null;
+    }
 
     console.log('[Session] JWT payload:', JSON.stringify(payload, null, 2));
 
@@ -143,7 +154,7 @@ export async function verifySessionToken(token: string): Promise<{ userId: numbe
     console.log('[Session] JWT token verified successfully for userId:', userId);
     return { userId, iat, exp };
   } catch (error) {
-    console.error('[Session] Failed to verify JWT token:', error);
+    console.error('[Session] Unexpected error in verifySessionToken:', error);
     return null;
   }
 }

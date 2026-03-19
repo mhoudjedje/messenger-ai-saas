@@ -12,6 +12,7 @@
 - [x] Routes de navigation intégrées dans App.tsx
 - [x] Tests unitaires pour authentification (9 tests, tous passants)
 - [x] FIX: Session persistence - JWT userId extraction from insert result
+- [x] REFACTOR: Authentification JWT → Server Sessions (session-store.ts)
 - [ ] Implémenter Meta Cloud API OTP WhatsApp (Algérie)
 - [ ] Supprimer Manus Auth, utiliser Aiteam Auth custom (en production)
 

@@ -3,7 +3,7 @@ import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
 import { parse as parseCookieHeader } from "cookie";
 import { COOKIE_NAME } from "../../shared/const";
-import { verifySessionToken } from "./aiteam-auth";
+import { sessionStore } from "./session-store";
 import * as db from "../db";
 
 export type TrpcContext = {
@@ -14,39 +14,44 @@ export type TrpcContext = {
 
 /**
  * Authenticate AITeam users (Email OTP + Google OAuth)
- * Uses custom JWT tokens stored in cookies
+ * Uses server-side session storage
  */
 async function authenticateAiteamUser(req: CreateExpressContextOptions["req"]): Promise<User | null> {
   try {
+    console.log('[Auth] authenticateAiteamUser called');
     // Parse cookies
     const cookieHeader = req.headers.cookie;
+    console.log('[Auth] Cookie header:', cookieHeader ? 'present' : 'missing');
     if (!cookieHeader) {
       console.log('[Auth] No cookie header found');
       return null;
     }
 
     const cookies = parseCookieHeader(cookieHeader);
-    const sessionToken = cookies[COOKIE_NAME];
+    console.log('[Auth] Parsed cookies keys:', Object.keys(cookies));
+    console.log('[Auth] COOKIE_NAME:', COOKIE_NAME);
+    const sessionId = cookies[COOKIE_NAME];
+    console.log('[Auth] Session ID found:', !!sessionId);
 
-    if (!sessionToken) {
-      console.log('[Auth] No session token in cookies');
+    if (!sessionId) {
+      console.log('[Auth] No session ID in cookies');
       return null;
     }
 
-    console.log('[Auth] Found session token, verifying...');
-    // Verify the JWT token
-    const payload = await verifySessionToken(sessionToken);
-    if (!payload || !payload.userId) {
-      console.warn("[Auth] Failed to verify AITeam session token", { payload });
+    console.log('[Auth] Found session ID, verifying...');
+    // Verify the server session
+    const sessionData = sessionStore.getSession(sessionId);
+    if (!sessionData || !sessionData.userId) {
+      console.warn("[Auth] Failed to verify AITeam session", { sessionData });
       return null;
     }
 
-    console.log('[Auth] Session token verified, userId:', payload.userId);
+    console.log('[Auth] Session verified, userId:', sessionData.userId);
 
     // Get user from database
-    const user = await db.getUserById(payload.userId);
+    const user = await db.getUserById(sessionData.userId);
     if (!user) {
-      console.warn(`[Auth] User not found for userId: ${payload.userId}`);
+      console.warn(`[Auth] User not found for userId: ${sessionData.userId}`);
       return null;
     }
 

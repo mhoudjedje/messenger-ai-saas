@@ -26,11 +26,12 @@ export default function Dashboard() {
   });
 
   // Redirect to premium if no active subscription
-  useEffect(() => {
-    if (!authLoading && !subLoading && user && !hasAccess) {
-      navigate('/premium');
-    }
-  }, [authLoading, subLoading, user, hasAccess, navigate]);
+  // TEMPORARY: Commented out for testing - allow free access to dashboard
+  // useEffect(() => {
+  //   if (!authLoading && !subLoading && user && !hasAccess) {
+  //     navigate('/premium');
+  //   }
+  // }, [authLoading, subLoading, user, hasAccess, navigate]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
