@@ -6,6 +6,7 @@ import {
   getUserPreferences,
   createOrUpdateUserPreferences,
 } from '../db';
+import { generatePersonalizedResponse, Language } from '../openai-helper';
 
 export const agentRouter = router({
   // Obtenir la configuration de l'agent pour une page
@@ -68,5 +69,40 @@ export const agentRouter = router({
       });
 
       return { success: true };
+    }),
+
+  // Test agent message response
+  testMessage: protectedProcedure
+    .input(
+      z.object({
+        message: z.string(),
+        systemPrompt: z.string().optional(),
+        personality: z.string().optional(),
+        language: z.enum(['ar', 'fr', 'en']).optional(),
+        maxTokens: z.number().optional(),
+        temperature: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await generatePersonalizedResponse({
+          userMessage: input.message,
+          language: (input.language as Language) || 'ar',
+          agentPersonality: input.personality,
+          customSystemPrompt: input.systemPrompt,
+          maxTokens: input.maxTokens || 500,
+          temperature: input.temperature || 0.7,
+        });
+
+        return {
+          success: true,
+          response: response,
+        };
+      } catch (error) {
+        console.error('[Agent Test] Error:', error);
+        throw new Error(
+          error instanceof Error ? error.message : 'Failed to generate response'
+        );
+      }
     }),
 });

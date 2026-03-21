@@ -10,6 +10,7 @@ import { Slider } from '@/components/ui/slider';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Language, LANGUAGES } from '@/lib/i18n';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function AgentConfig() {
   const { pageId } = useParams<{ pageId: string }>();
@@ -30,32 +31,51 @@ export default function AgentConfig() {
   const [isTesting, setIsTesting] = useState(false);
 
   // Récupérer la configuration existante
-  const { data: agentConfig, isLoading } = trpc.messenger.getPages.useQuery();
+  const { data: agentConfig, isLoading, refetch } = trpc.agent.getConfig.useQuery(
+    { pageId: pageId || '' },
+    { enabled: !!pageId }
+  );
 
   // Mutation pour sauvegarder la configuration
-  const saveConfigMutation = trpc.messenger.connectPage.useMutation({
+  const saveConfigMutation = trpc.agent.saveConfig.useMutation({
     onSuccess: () => {
       toast.success(t('agent.saved'));
+      refetch();
     },
     onError: (error) => {
-      toast.error(t('common.error'));
+      toast.error(error.message || t('common.error'));
     },
   });
 
   useEffect(() => {
     // Charger la configuration existante
     if (agentConfig) {
-      // TODO: Charger depuis la base de données
+      setFormData({
+        agentName: agentConfig.agentName || 'AI Agent',
+        personality: agentConfig.personality || '',
+        systemPrompt: agentConfig.systemPrompt || '',
+        responseLanguage: (agentConfig.responseLanguage as Language) || 'ar',
+        maxTokens: agentConfig.maxTokens || 500,
+        temperature: agentConfig.temperature ? parseFloat(agentConfig.temperature as any) : 0.7,
+      });
     }
   }, [agentConfig]);
 
   const handleSave = async () => {
-    try {
-      // TODO: Appeler la mutation pour sauvegarder
-      toast.success(t('agent.saved'));
-    } catch (error) {
-      toast.error(t('common.error'));
+    if (!pageId) {
+      toast.error('Page ID is missing');
+      return;
     }
+
+    saveConfigMutation.mutate({
+      pageId,
+      agentName: formData.agentName,
+      personality: formData.personality,
+      systemPrompt: formData.systemPrompt,
+      responseLanguage: formData.responseLanguage,
+      maxTokens: formData.maxTokens,
+      temperature: formData.temperature,
+    });
   };
 
   const handleTest = async () => {
@@ -66,10 +86,33 @@ export default function AgentConfig() {
 
     setIsTesting(true);
     try {
-      // TODO: Appeler l'API pour tester le message
-      setTestResponse('Ceci est une réponse de test de l\'agent IA...');
+      // Call the OpenAI API through the backend
+      const response = await fetch('/api/trpc/agent.testMessage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          input: {
+            message: testMessage,
+            systemPrompt: formData.systemPrompt,
+            personality: formData.personality,
+            language: formData.responseLanguage,
+            maxTokens: formData.maxTokens,
+            temperature: formData.temperature,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      setTestResponse(data.result?.response || 'No response received');
     } catch (error) {
-      toast.error(t('common.error'));
+      toast.error(error instanceof Error ? error.message : t('common.error'));
+      setTestResponse('');
     } finally {
       setIsTesting(false);
     }
@@ -83,8 +126,9 @@ export default function AgentConfig() {
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className={dir === 'rtl' ? 'ml-auto' : ''}
+            className="text-primary hover:text-primary/80"
           >
+            {dir === 'rtl' ? <ArrowRight className="w-4 h-4 me-2" /> : <ArrowLeft className="w-4 h-4 me-2" />}
             {t('common.back')}
           </Button>
           <h1 className="text-3xl font-bold text-slate-900 mt-4">{t('agent.title')}</h1>
@@ -183,8 +227,13 @@ export default function AgentConfig() {
             </div>
 
             {/* Save Button */}
-            <Button onClick={handleSave} className="w-full" size="lg">
-              {t('agent.save')}
+            <Button 
+              onClick={handleSave} 
+              className="w-full" 
+              size="lg"
+              disabled={saveConfigMutation.isPending}
+            >
+              {saveConfigMutation.isPending ? t('common.loading') : t('agent.save')}
             </Button>
           </CardContent>
         </Card>
@@ -207,7 +256,7 @@ export default function AgentConfig() {
               />
             </div>
 
-            <Button onClick={handleTest} disabled={isTesting} className="w-full">
+            <Button onClick={handleTest} disabled={isTesting || !pageId} className="w-full">
               {isTesting ? t('common.loading') : 'Tester'}
             </Button>
 

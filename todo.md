@@ -363,3 +363,17 @@
     2. Edit the AITeam app credentials
     3. Add `https://receipt-will-also-chicago.trycloudflare.com/api/auth/google/callback` to Authorized redirect URIs
     4. Save and test again
+
+
+## BUG FIX (RÉSOLU) : Agent Configuration Settings Not Saving & Test Response Timing Out
+- [x] Diagnostic : AgentConfig.tsx avait des TODO non implémentés
+- [x] Cause 1 : handleSave() appelait le mauvais endpoint (messenger.connectPage au lieu de agent.saveConfig)
+- [x] Cause 2 : handleTest() était juste un placeholder sans appel API réel
+- [x] Fix 1 : Corriger AgentConfig.tsx pour appeler agent.saveConfig avec les bons paramètres
+- [x] Fix 2 : Implémenter handleTest() pour appeler /api/trpc/agent.testMessage
+- [x] Fix 3 : Ajouter procédure testMessage au agent router
+- [x] Fix 4 : Intégrer generatePersonalizedResponse pour les réponses IA
+- [x] Fix 5 : Charger la configuration existante au chargement de la page
+- [x] Écrire 14 tests unitaires pour agent configuration (tous passants)
+- [ ] Tester manuellement : sauvegarder la configuration et voir les changements persister
+- [ ] Tester manuellement : envoyer un message de test et recevoir une réponse IA
