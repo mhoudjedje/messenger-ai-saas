@@ -377,3 +377,13 @@
 - [x] Écrire 14 tests unitaires pour agent configuration (tous passants)
 - [ ] Tester manuellement : sauvegarder la configuration et voir les changements persister
 - [ ] Tester manuellement : envoyer un message de test et recevoir une réponse IA
+
+
+## MANUS AI INTEGRATION (CONFIRMED)
+- [x] Verified that code already uses Manus Forge API (not OpenAI)
+- [x] Fixed error handling in openai-helper.ts for better debugging
+- [x] Added logging for LLM invocation and responses
+- [x] Fixed TypeScript errors in LLM parameter passing
+- [x] Confirmed BUILT_IN_FORGE_API_KEY is properly configured
+- [ ] Test agent message generation with Manus AI
+- [ ] Verify responses are generated correctly

@@ -77,13 +77,20 @@ export async function generateAIResponse(params: GenerateResponseParams): Promis
       content: userMessage,
     });
 
-    // Appeler l'API OpenAI
+    console.log('[LLM] Invoking Manus Forge API with', messages.length, 'messages');
+    
+    // Appeler l'API Manus Forge (via invokeLLM)
     const response = await invokeLLM({
       messages: messages as any,
+      max_tokens: maxTokens,
     });
 
+    const responseContent = response.choices?.[0]?.message?.content;
+    const contentPreview = typeof responseContent === 'string' ? responseContent.substring(0, 100) : 'non-text content';
+    console.log('[LLM] Response received:', contentPreview);
+
     const content = response.choices?.[0]?.message?.content;
-    const responseText = typeof content === 'string' ? content : '';
+    const responseText = typeof content === 'string' ? content : JSON.stringify(content);
     const tokensUsed = response.usage?.total_tokens || 0;
 
     return {
@@ -92,8 +99,9 @@ export async function generateAIResponse(params: GenerateResponseParams): Promis
       language,
     };
   } catch (error) {
-    console.error('[OpenAI] Failed to generate response:', error);
-    throw error;
+    console.error('[LLM] Failed to generate response:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`LLM API Error: ${errorMessage}`);
   }
 }
 
@@ -115,10 +123,12 @@ export async function generatePersonalizedResponse(params: {
     agentPersonality,
     customSystemPrompt,
     conversationHistory,
-    maxTokens,
-    temperature,
+    maxTokens = 500,
+    temperature = 0.7,
   } = params;
 
+  console.log('[Agent] Generating personalized response for language:', language);
+  
   let systemPrompt = customSystemPrompt || SYSTEM_PROMPTS[language];
 
   // Ajouter la personnalité de l'agent si fournie
@@ -126,16 +136,22 @@ export async function generatePersonalizedResponse(params: {
     systemPrompt += `\n\nCaractéristiques de l'agent:\n${agentPersonality}`;
   }
 
-  const result = await generateAIResponse({
-    userMessage,
-    language,
-    conversationHistory,
-    systemPrompt,
-    maxTokens,
-    temperature,
-  });
+  try {
+    const result = await generateAIResponse({
+      userMessage,
+      language,
+      conversationHistory,
+      systemPrompt,
+      maxTokens,
+      temperature,
+    });
 
-  return result.response;
+    console.log('[Agent] Response generated successfully');
+    return result.response;
+  } catch (error) {
+    console.error('[Agent] Error generating response:', error);
+    throw error;
+  }
 }
 
 /**
