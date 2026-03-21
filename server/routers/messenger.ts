@@ -26,6 +26,10 @@ import {
   formatForMessenger,
   Language,
 } from '../openai-helper';
+import {
+  validateFacebookToken,
+  getAccessiblePages,
+} from '../facebook-token-helper';
 
 export const messengerRouter = router({
   // Obtenir les pages Messenger connectées de l'utilisateur
@@ -51,6 +55,57 @@ export const messengerRouter = router({
       });
 
       return { success: true };
+    }),
+
+  // Connecter une page via token manuel
+  connectPageWithToken: protectedProcedure
+    .input(
+      z.object({
+        pageAccessToken: z.string().min(1, 'Token is required'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Valider le token
+      const validation = await validateFacebookToken(input.pageAccessToken);
+      
+      if (!validation.isValid) {
+        throw new Error(validation.error || 'Invalid token');
+      }
+
+      if (!validation.pageInfo) {
+        throw new Error('Could not retrieve page information');
+      }
+
+      // Vérifier si la page est déjà connectée
+      const existing = await getMessengerPageByPageId(validation.pageInfo.id);
+      if (existing) {
+        throw new Error('This page is already connected to another account');
+      }
+
+      // Créer la page
+      await createMessengerPage({
+        userId: ctx.user.id,
+        pageId: validation.pageInfo.id,
+        pageName: validation.pageInfo.name,
+        pageAccessToken: input.pageAccessToken,
+      });
+
+      return {
+        success: true,
+        pageInfo: validation.pageInfo,
+      };
+    }),
+
+  // Récupérer les pages accessibles avec un token
+  getAccessiblePagesWithToken: protectedProcedure
+    .input(
+      z.object({
+        accessToken: z.string().min(1, 'Token is required'),
+      })
+    )
+    .query(async ({ input }) => {
+      const pages = await getAccessiblePages(input.accessToken);
+      return pages;
     }),
 
   // Obtenir les conversations de l'utilisateur

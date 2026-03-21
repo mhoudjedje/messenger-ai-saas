@@ -43,6 +43,14 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // Cookie parser for reading cookies (OAuth state, etc.)
   app.use(cookieParser());
+  
+  // Temporary request logging for debugging
+  app.use((req, res, next) => {
+    if (req.path.includes('oauth') || req.path.includes('callback')) {
+      console.log(`[REQ] ${req.method} ${req.originalUrl} | Host: ${req.get('host')} | Origin: ${req.get('origin')}`);
+    }
+    next();
+  });
   // OAuth routes for Manus
   registerManusoAuthRoutes(app);
   // OAuth routes for Facebook Messenger

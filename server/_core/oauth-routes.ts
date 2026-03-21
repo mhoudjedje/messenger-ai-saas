@@ -1,5 +1,6 @@
 import { Express, Request, Response } from 'express';
 import { nanoid } from 'nanoid';
+import { parse as parseCookieHeader } from 'cookie';
 import {
   generateOAuthLoginUrl,
   exchangeCodeForToken,
@@ -11,6 +12,8 @@ import {
 import { getDb } from '../db';
 import { messengerPages } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { sessionStore } from './session-store';
+import { COOKIE_NAME } from '../../shared/const';
 
 /**
  * Enregistre les routes OAuth Meta
@@ -58,7 +61,10 @@ export function registerOAuthRoutes(app: Express) {
 
   // GET /api/oauth/facebook/callback - Traite le callback OAuth
   app.get('/api/oauth/facebook/callback', async (req: Request, res: Response) => {
+    console.log('[OAuth] CALLBACK ROUTE TRIGGERED - URL:', req.originalUrl);
+    console.log('[OAuth] Query params:', req.query);
     try {
+      console.log('[OAuth] Callback received');
       const { code, state, error, error_description } = req.query;
 
       // Vérifier les erreurs OAuth
@@ -98,7 +104,31 @@ export function registerOAuthRoutes(app: Express) {
       console.log(`[OAuth] Found ${pages.length} pages for user ${userInfo.id}`);
 
       // Récupérer l'utilisateur actuel depuis la session
-      const userId = (req as any).user?.id;
+      let userId: number | null = null;
+      
+      // Extract user ID from session cookie
+      const cookieHeader = req.headers.cookie;
+      console.log('[OAuth] Cookie header:', cookieHeader ? 'present' : 'missing');
+      
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        console.log('[OAuth] Parsed cookies:', Object.keys(cookies));
+        
+        const sessionId = cookies[COOKIE_NAME];
+        console.log('[OAuth] Session ID from cookie:', sessionId ? 'found' : 'not found');
+        
+        if (sessionId) {
+          const sessionData = sessionStore.getSession(sessionId);
+          console.log('[OAuth] Session data:', sessionData ? `found (userId: ${sessionData.userId})` : 'not found');
+          
+          if (sessionData) {
+            userId = sessionData.userId;
+          }
+        }
+      }
+      
+      console.log('[OAuth] Final userId:', userId || 'null');
+      
       if (!userId) {
         console.warn('[OAuth] No authenticated user in session');
         return res.redirect('/oauth-callback?oauth_error=not_authenticated');
@@ -173,15 +203,28 @@ export function registerOAuthRoutes(app: Express) {
   app.get('/api/oauth/disconnect/:pageId', async (req: Request, res: Response) => {
     try {
       const { pageId } = req.params;
-      const userId = (req as any).user?.id;
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' });
-      }
 
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: 'Database error' });
+      }
+
+      // Extract user ID from session cookie
+      let userId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        const sessionId = cookies[COOKIE_NAME];
+        if (sessionId) {
+          const sessionData = sessionStore.getSession(sessionId);
+          if (sessionData) {
+            userId = sessionData.userId;
+          }
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
       }
 
       // Vérifier que la page appartient à l'utilisateur

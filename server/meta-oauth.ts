@@ -77,6 +77,7 @@ export async function exchangeCodeForToken(code: string, origin?: string): Promi
     : META_OAUTH_CONFIG.redirectUri;
 
   try {
+    console.log('[Meta OAuth] Exchanging code for token with redirectUri:', redirectUri);
     const response = await axios.post(
       `${META_OAUTH_CONFIG.graphApiUrl}/${META_OAUTH_CONFIG.apiVersion}/oauth/access_token`,
       {
@@ -86,11 +87,16 @@ export async function exchangeCodeForToken(code: string, origin?: string): Promi
         code,
       }
     );
+    console.log('[Meta OAuth] Token exchange successful');
 
     return response.data;
   } catch (error) {
-    console.error('[Meta OAuth] Error exchanging code for token:', error);
-    throw new Error('Failed to exchange OAuth code for token');
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const errorData = (error as any)?.response?.data;
+    console.error('[Meta OAuth] Error exchanging code for token:', errorMsg);
+    console.error('[Meta OAuth] Error details:', errorData);
+    console.error('[Meta OAuth] Request params:', { client_id: META_OAUTH_CONFIG.clientId, redirect_uri: redirectUri, code });
+    throw new Error(`Failed to exchange OAuth code for token: ${errorMsg}`);
   }
 }
 

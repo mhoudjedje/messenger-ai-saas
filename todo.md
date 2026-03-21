@@ -26,6 +26,17 @@
 - [ ] Tester endpoint /api/oauth/facebook en production (nécessite configuration Meta App Console)
 - [ ] Valider redirect URI dans Meta App Console
 
+### Alternative : Connexion Manuelle par Token (IMPLÉMENTÉ)
+- [x] Créer helper facebook-token-helper.ts pour valider les tokens
+- [x] Implémenter validateFacebookToken() pour vérifier les tokens
+- [x] Implémenter getAccessiblePages() pour récupérer les pages accessibles
+- [x] Ajouter procédure tRPC connectPageWithToken
+- [x] Ajouter procédure tRPC getAccessiblePagesWithToken
+- [x] Créer composant React ConnectPageManual.tsx
+- [x] Intégrer dans la page Pages.tsx avec toggle OAuth/Token
+- [x] Écrire 9 tests unitaires pour facebook-token-helper.ts (tous passants)
+- [ ] Tester le flux complet avec un vrai token Facebook
+
 ### Design System Moderne & Épuré
 - [x] Appliquer skill-design-system-modern-clean (WhatsApp-inspired)
 - [x] Implémenter Tailwind 4 avec OKLCH colors
@@ -223,6 +234,16 @@
 - [x] Tests unitaires pour valider la redirect_uri (28 tests passants)
 - [ ] Test utilisateur final avec un vrai compte Facebook
 
+## SOLUTION : Manuel Token Entry (Alternative à OAuth)
+- [x] Implémenté connexion manuelle par token Facebook
+- [x] Utilisateurs peuvent copier/coller leur page access token
+- [x] Validation automatique du token via Facebook Graph API
+- [x] Récupération des informations de la page
+- [x] Stockage sécurisé du token en base de données
+- [x] UI simple et intuitive
+- [x] Tests unitaires complets (9 tests)
+- [ ] Tester avec un vrai token Facebook
+
 
 ## PHASE 2 : Monétisation & Onboarding (EN COURS)
 
@@ -248,6 +269,7 @@
 - [x] Créer composant de sélection de plan (Algérie vs International)
 - [x] Créer bouton "Passer au Premium" pour chaque plan
 - [x] Afficher le statut d'abonnement dans le dashboard
+- [x] Connexion manuelle des pages Facebook par token (MVP alternative à OAuth)
 
 ### Wizard d'Onboarding Post-Paiement
 - [ ] Créer page /onboarding après paiement réussi
