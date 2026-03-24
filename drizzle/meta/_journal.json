@@ -29,6 +29,13 @@
       "when": 1773012001893,
       "tag": "0003_silly_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1774393523311,
+      "tag": "0004_wealthy_patriot",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,8 @@ export default function AgentConfig() {
   const { pageId } = useParams<{ pageId: string }>();
   const { t, dir } = useLanguage();
   const [, navigate] = useLocation();
+  
+  console.log('[AgentConfig] Component mounted with pageId:', pageId);
 
   const [formData, setFormData] = useState({
     agentName: 'AI Agent',
@@ -47,9 +49,25 @@ export default function AgentConfig() {
     },
   });
 
+  // Mutation pour tester le message
+  const testMessageMutation = trpc.agent.testMessage.useMutation({
+    onSuccess: (data) => {
+      console.log('[AgentConfig] Test mutation success:', data);
+      setTestResponse(data.response);
+      toast.success('Test réussi!');
+    },
+    onError: (error) => {
+      console.error('[AgentConfig] Test mutation error:', error);
+      toast.error(error.message || 'Erreur lors du test');
+      setTestResponse('');
+    },
+  });
+
   useEffect(() => {
     // Charger la configuration existante
+    console.log('[AgentConfig] Loading config for pageId:', pageId);
     if (agentConfig) {
+      console.log('[AgentConfig] Config loaded:', agentConfig);
       setFormData({
         agentName: agentConfig.agentName || 'AI Agent',
         personality: agentConfig.personality || '',
@@ -59,7 +77,7 @@ export default function AgentConfig() {
         temperature: agentConfig.temperature ? parseFloat(agentConfig.temperature as any) : 0.7,
       });
     }
-  }, [agentConfig]);
+  }, [agentConfig, pageId]);
 
   const handleSave = async () => {
     if (!pageId) {
@@ -67,6 +85,7 @@ export default function AgentConfig() {
       return;
     }
 
+    console.log('[AgentConfig] Saving config for pageId:', pageId);
     saveConfigMutation.mutate({
       pageId,
       agentName: formData.agentName,
@@ -76,7 +95,7 @@ export default function AgentConfig() {
       maxTokens: formData.maxTokens,
       temperature: formData.temperature,
     });
-  };
+  }
 
   const handleTest = async () => {
     if (!testMessage.trim()) {
@@ -85,34 +104,29 @@ export default function AgentConfig() {
     }
 
     setIsTesting(true);
+    console.log('[AgentConfig] Starting test with data:', {
+      message: testMessage,
+      systemPrompt: formData.systemPrompt,
+      personality: formData.personality,
+      language: formData.responseLanguage,
+      maxTokens: formData.maxTokens,
+      temperature: formData.temperature,
+    });
+    
     try {
-      // Call the OpenAI API through the backend
-      const response = await fetch('/api/trpc/agent.testMessage', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          input: {
-            message: testMessage,
-            systemPrompt: formData.systemPrompt,
-            personality: formData.personality,
-            language: formData.responseLanguage,
-            maxTokens: formData.maxTokens,
-            temperature: formData.temperature,
-          },
-        }),
+      // Use tRPC mutation to test the message
+      console.log('[AgentConfig] Calling testMessageMutation.mutateAsync...');
+      const result = await testMessageMutation.mutateAsync({
+        message: testMessage,
+        systemPrompt: formData.systemPrompt,
+        personality: formData.personality,
+        language: formData.responseLanguage,
+        maxTokens: formData.maxTokens,
+        temperature: formData.temperature,
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
-      setTestResponse(data.result?.response || 'No response received');
+      console.log('[AgentConfig] Test result:', result);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('common.error'));
-      setTestResponse('');
+      console.error('[AgentConfig] Test error:', error);
     } finally {
       setIsTesting(false);
     }
@@ -256,8 +270,15 @@ export default function AgentConfig() {
               />
             </div>
 
-            <Button onClick={handleTest} disabled={isTesting || !pageId} className="w-full">
-              {isTesting ? t('common.loading') : 'Tester'}
+            <Button 
+              onClick={() => {
+                console.log('[AgentConfig] Test button clicked');
+                handleTest();
+              }} 
+              disabled={testMessageMutation.isPending} 
+              className="w-full"
+            >
+              {testMessageMutation.isPending ? t('common.loading') : 'Tester'}
             </Button>
 
             {testResponse && (

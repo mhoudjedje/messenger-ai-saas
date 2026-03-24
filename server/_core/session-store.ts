@@ -26,7 +26,10 @@ class SessionStore {
       createdAt: now,
       expiresAt: now + expiryMs,
     });
-    console.log(`[SessionStore] Created session ${sessionId} for user ${userId}`);
+    console.log(`[SessionStore] ✅ Created session: ${sessionId}`);
+    console.log(`[SessionStore]    User: ${userId} (${email})`);
+    console.log(`[SessionStore]    Expires in: ${Math.floor(expiryMs / 1000)}s`);
+    console.log(`[SessionStore]    Total sessions now: ${this.sessions.size}`);
   }
 
   /**
@@ -34,19 +37,28 @@ class SessionStore {
    */
   getSession(sessionId: string): SessionData | null {
     const session = this.sessions.get(sessionId);
+    const sessionCount = this.sessions.size;
+    const allSessionIds = Array.from(this.sessions.keys()).slice(0, 3); // First 3 for debugging
     
     if (!session) {
-      console.log(`[SessionStore] Session not found: ${sessionId}`);
+      console.log(`[SessionStore] ❌ Session not found: ${sessionId}`);
+      console.log(`[SessionStore] Total sessions in store: ${sessionCount}`);
+      if (sessionCount > 0) {
+        console.log(`[SessionStore] Sample session IDs: ${allSessionIds.join(', ')}`);
+      }
       return null;
     }
 
     // Check if expired
-    if (session.expiresAt < Date.now()) {
-      console.log(`[SessionStore] Session expired: ${sessionId}`);
+    const now = Date.now();
+    const expiresIn = session.expiresAt - now;
+    if (session.expiresAt < now) {
+      console.log(`[SessionStore] ❌ Session expired: ${sessionId} (expired ${Math.floor(expiresIn / 1000)}s ago)`);
       this.sessions.delete(sessionId);
       return null;
     }
 
+    console.log(`[SessionStore] ✅ Session found and valid: ${sessionId} (expires in ${Math.floor(expiresIn / 1000)}s)`);
     return session;
   }
 

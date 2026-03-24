@@ -15,7 +15,7 @@ import {
 import { ENV } from './env';
 import { getSessionCookieOptions } from './cookies';
 import { COOKIE_NAME } from '../../shared/const';
-import { sessionStore } from './session-store';
+import { dbSessionStore } from './db-session-store';
 const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -170,16 +170,20 @@ export function registerAiteamAuthRoutes(app: Express) {
       // Créer une session serveur
       const userName = existingUser.length > 0 ? (existingUser[0].name || email) : (name || email);
       const sessionId = nanoid(32);
-      sessionStore.createSession(sessionId, userId, email, userName, SESSION_EXPIRY_MS);
+      console.log(`[Auth] 🔧 Creating session: ${sessionId}`);
+      await dbSessionStore.createSession(sessionId, userId, email, userName, SESSION_EXPIRY_MS);
 
       // Définir le cookie de session
       const cookieOptions = getSessionCookieOptions(req);
+      console.log(`[Auth] 🔧 Setting cookie with options:`, { cookieOptions, maxAge: SESSION_EXPIRY_MS });
       res.cookie(COOKIE_NAME, sessionId, {
         ...cookieOptions,
         maxAge: SESSION_EXPIRY_MS,
       });
 
-      console.log(`[Auth] User ${userId} authenticated via email OTP, session: ${sessionId}`);
+      console.log(`[Auth] ✅ User ${userId} authenticated via email OTP`);
+      console.log(`[Auth]    Session ID: ${sessionId}`);
+      console.log(`[Auth]    Cookie name: ${COOKIE_NAME}`);
 
 
 
@@ -190,7 +194,6 @@ export function registerAiteamAuthRoutes(app: Express) {
 
 
 
-      console.log(`[Auth] User ${userId} authenticated via email OTP`);
       res.json({ success: true, userId, message: 'Authenticated' });
     } catch (error) {
       console.error('[Auth] Error verifying OTP:', error);
@@ -307,23 +310,20 @@ export function registerAiteamAuthRoutes(app: Express) {
       // Créer une session serveur
       const userName = existingUser.length > 0 ? (existingUser[0].name || googleUser.email) : (googleUser.name || googleUser.email);
       const sessionId = nanoid(32);
-      sessionStore.createSession(sessionId, userId, googleUser.email, userName, SESSION_EXPIRY_MS);
+      console.log(`[Auth] 🔧 Creating session: ${sessionId}`);
+      await dbSessionStore.createSession(sessionId, userId, googleUser.email, userName, SESSION_EXPIRY_MS);
 
       // Définir le cookie de session
       const cookieOptions = getSessionCookieOptions(req);
-      console.log('[Auth] Setting session cookie with options:', {
-        ...cookieOptions,
-        maxAge: SESSION_EXPIRY_MS,
-        protocol: req.protocol,
-        host: req.get('host'),
-        xForwardedProto: req.headers['x-forwarded-proto'],
-      });
+      console.log(`[Auth] 🔧 Setting cookie with options:`, { cookieOptions, maxAge: SESSION_EXPIRY_MS });
       res.cookie(COOKIE_NAME, sessionId, {
         ...cookieOptions,
         maxAge: SESSION_EXPIRY_MS,
       });
 
-      console.log(`[Auth] User ${userId} authenticated via Google`);
+      console.log(`[Auth] ✅ User ${userId} authenticated via Google`);
+      console.log(`[Auth]    Session ID: ${sessionId}`);
+      console.log(`[Auth]    Cookie name: ${COOKIE_NAME}`);
       console.log('[Auth] Redirecting to /dashboard?auth_success=true');
       res.redirect('/dashboard?auth_success=true');
     } catch (error) {
@@ -338,7 +338,19 @@ export function registerAiteamAuthRoutes(app: Express) {
    * POST /api/auth/logout
    * Déconnecter l'utilisateur
    */
-  app.post('/api/auth/logout', (req: Request, res: Response) => {
+  app.post('/api/auth/logout', async (req: Request, res: Response) => {
+    try {
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = require('cookie').parse(cookieHeader);
+        const sessionId = cookies[COOKIE_NAME];
+        if (sessionId) {
+          await dbSessionStore.deleteSession(sessionId);
+        }
+      }
+    } catch (error) {
+      console.error('[Auth] Error deleting session on logout:', error);
+    }
     res.clearCookie(COOKIE_NAME);
     console.log('[Auth] User logged out');
     res.json({ success: true, message: 'Logged out' });
@@ -401,7 +413,7 @@ export function registerAiteamAuthRoutes(app: Express) {
 
       // Créer une session serveur
       const sessionId = nanoid(32);
-      sessionStore.createSession(sessionId, userId, testEmail, testName, SESSION_EXPIRY_MS);
+      await dbSessionStore.createSession(sessionId, userId, testEmail, testName, SESSION_EXPIRY_MS);
 
       // Définir le cookie de session avec les options appropriées
       const cookieOptions = getSessionCookieOptions(req);

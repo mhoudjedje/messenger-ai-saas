@@ -387,3 +387,22 @@
 - [x] Confirmed BUILT_IN_FORGE_API_KEY is properly configured
 - [ ] Test agent message generation with Manus AI
 - [ ] Verify responses are generated correctly
+
+
+## BUG (EN COURS) : Test Message Feature - 400 Bad Request
+- [ ] Debug: Session persistence issue - sessions not found in in-memory store
+- [ ] Implement: Database-backed sessions table in Drizzle schema
+- [ ] Implement: Replace SessionStore with database queries
+- [ ] Update: Auth routes to use new database sessions
+- [ ] Test: Complete auth + test message flow
+
+
+## BUG (FIXED) : Test Message Failure - Session Persistence Issue
+- [x] Root cause: In-memory session store cleared on server restart
+- [x] Created sessions table in database schema (drizzle/schema.ts)
+- [x] Implemented DbSessionStore (server/_core/db-session-store.ts) for database persistence
+- [x] Updated authentication routes to use database-backed sessions
+- [x] Removed Manus OAuth fallback - now using only AITeam authentication
+- [x] Updated context.ts to remove Manus OAuth authentication
+- [x] Tested complete flow: login → test message → LLM response ✅
+- [x] Sessions now survive server restarts

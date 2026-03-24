@@ -189,6 +189,19 @@ export const userPreferences = mysqlTable("user_preferences", {
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = typeof userPreferences.$inferInsert;
 
+// Sessions - Server-side session storage for AITeam authentication
+export const sessions = mysqlTable("sessions", {
+  id: varchar("id", { length: 255 }).primaryKey(), // Session ID (nanoid)
+  userId: int("userId").notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  userName: text("userName"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+});
+
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = typeof sessions.$inferInsert;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   messengerPages: many(messengerPages),
