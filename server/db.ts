@@ -129,8 +129,13 @@ export async function getMessengerPageByPageId(pageId: string) {
 
 export async function createMessengerPage(data: { userId: number; pageId: string; pageName?: string; pageAccessToken: string }) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    console.error('[DB] createMessengerPage: Database not available!');
+    throw new Error("Database not available");
+  }
+  console.log(`[DB] createMessengerPage: Inserting page ${data.pageId} for user ${data.userId}`);
   await db.insert(messengerPages).values(data);
+  console.log(`[DB] createMessengerPage: Insert completed for page ${data.pageId}`);
 }
 
 // Agent Configs
@@ -241,21 +246,68 @@ export async function createOrUpdateUserPreferences(data: Partial<UserPreference
   }
 }
 
-// Check if user has active subscription
 export async function isUserSubscriptionActive(userId: number): Promise<boolean> {
-  const sub = await getSubscriptionByUserId(userId);
+  const db = await getDb();
+  if (!db) return false;
+  let sub = await getSubscriptionByUserId(userId);
+  
+  // If no subscription exists, create a default Free plan
+  if (!sub) {
+    console.log(`[DB] Creating default Free subscription for user ${userId}`);
+    try {
+      await db.insert(subscriptions).values({
+        userId,
+        stripeCustomerId: `free_${userId}_${Date.now()}`,
+        planType: 'free',
+        status: 'active',
+        messagesLimit: 10, // Allow 10 free messages per month for testing
+        messagesUsed: 0,
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      });
+      console.log(`[DB] Default Free subscription created for user ${userId}`);
+      sub = await getSubscriptionByUserId(userId);
+    } catch (error) {
+      console.error(`[DB] Error creating default subscription:`, error);
+      return false;
+    }
+  }
+  
   if (!sub) return false;
   return sub.status === 'active' || sub.status === 'trialing';
 }
 
 // Check if user has exceeded message limit
 export async function hasExceededMessageLimit(userId: number): Promise<boolean> {
-  const sub = await getSubscriptionByUserId(userId);
+  let sub = await getSubscriptionByUserId(userId);
+  
+  // If no subscription exists, create a default Free plan
+  if (!sub) {
+    const db = await getDb();
+    if (!db) return true;
+    try {
+      await db.insert(subscriptions).values({
+        userId,
+        stripeCustomerId: `free_${userId}_${Date.now()}`,
+        planType: 'free',
+        status: 'active',
+        messagesLimit: 10,
+        messagesUsed: 0,
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+      sub = await getSubscriptionByUserId(userId);
+    } catch (error) {
+      console.error(`[DB] Error creating default subscription:`, error);
+      return true;
+    }
+  }
+  
   if (!sub) return true;
   return sub.messagesUsed >= sub.messagesLimit;
 }
 
-// Increment message count
+// I
 export async function incrementMessageCount(userId: number) {
   const db = await getDb();
   if (!db) return;

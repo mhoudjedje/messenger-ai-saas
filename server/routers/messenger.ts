@@ -5,6 +5,7 @@ import {
   getMessengerPageByPageId,
   createMessengerPage,
   getAgentConfigByPageId,
+  createOrUpdateAgentConfig,
   getOrCreateConversation,
   createMessage,
   getConversationsByUserId,
@@ -13,6 +14,7 @@ import {
   hasExceededMessageLimit,
   incrementMessageCount,
 } from '../db';
+import { TRPCError } from '@trpc/server';
 import {
   sendMessengerMessage,
   sendTypingIndicator,
@@ -65,30 +67,72 @@ export const messengerRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      console.log(`[connectPageWithToken] Starting for user ${ctx.user.id}`);
+      
       // Valider le token
       const validation = await validateFacebookToken(input.pageAccessToken);
+      console.log(`[connectPageWithToken] Token validation result:`, validation);
       
       if (!validation.isValid) {
-        throw new Error(validation.error || 'Invalid token');
+        console.error(`[connectPageWithToken] Invalid token: ${validation.error}`);
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: validation.error || 'Invalid token',
+        });
       }
 
       if (!validation.pageInfo) {
-        throw new Error('Could not retrieve page information');
+        console.error(`[connectPageWithToken] No page info returned`);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Could not retrieve page information',
+        });
       }
+
+      console.log(`[connectPageWithToken] Page info:`, validation.pageInfo);
 
       // Vérifier si la page est déjà connectée
       const existing = await getMessengerPageByPageId(validation.pageInfo.id);
       if (existing) {
+        console.error(`[connectPageWithToken] Page already connected`);
         throw new Error('This page is already connected to another account');
       }
 
       // Créer la page
-      await createMessengerPage({
-        userId: ctx.user.id,
-        pageId: validation.pageInfo.id,
-        pageName: validation.pageInfo.name,
-        pageAccessToken: input.pageAccessToken,
-      });
+      console.log(`[connectPageWithToken] Creating page in database...`);
+      try {
+        await createMessengerPage({
+          userId: ctx.user.id,
+          pageId: validation.pageInfo.id,
+          pageName: validation.pageInfo.name,
+          pageAccessToken: input.pageAccessToken,
+        });
+        console.log(`[connectPageWithToken] Page created, verifying...`);
+        
+        // Verify immediately that the page was inserted
+        const verifyInsert = await getMessengerPageByPageId(validation.pageInfo.id);
+        if (!verifyInsert) {
+          console.error(`[connectPageWithToken] CRITICAL: Page insert verification failed! Page not found after insert.`);
+          throw new Error('Page was not saved to database. Please try again.');
+        }
+        
+        console.log(`[connectPageWithToken] Page verified in database:`, verifyInsert.pageId);
+        
+        // Create default agent config for the page
+        console.log(`[connectPageWithToken] Creating default agent config...`);
+        await createOrUpdateAgentConfig({
+          userId: ctx.user.id,
+          pageId: validation.pageInfo.id,
+          agentName: `AI Agent - ${validation.pageInfo.name}`,
+          personality: 'You are a helpful and friendly AI assistant. Respond politely and concisely.',
+          responseLanguage: 'ar',
+          maxTokens: 500,
+        });
+        console.log(`[connectPageWithToken] Default agent config created successfully`);
+      } catch (error) {
+        console.error(`[connectPageWithToken] Error creating page:`, error);
+        throw error;
+      }
 
       return {
         success: true,
