@@ -436,3 +436,21 @@
 - [x] Webhook procedure traite correctement les événements Messenger
 - [x] Logs confirmés : webhook reçoit les messages, valide les pages, appelle la procédure
 - [x] Prochaine étape : Connecter une page réelle dans la DB pour tester le flux complet
+
+
+## PHASE 3 : AI Response Generation & Automation Loop (COMPLETED)
+- [x] Webhook receives Messenger events
+- [x] Validates subscription status before processing
+- [x] Checks message limits per user
+- [x] Extracts message content (text + attachments)
+- [x] Detects message language (Arabic/French/English)
+- [x] Retrieves user's agent configuration
+- [x] Calls OpenAI GPT-4o with personalized prompt
+- [x] Formats AI response for Messenger (splits long messages)
+- [x] Sends response back via Messenger Send API
+- [x] Stores conversation history (user + agent messages)
+- [x] Handles errors gracefully with user notification
+- [x] Sends typing indicator while processing
+- [x] Increments message counter for billing
+- [ ] Write integration tests for complete webhook pipeline
+- [ ] Test end-to-end with real Messenger page and AI responses
