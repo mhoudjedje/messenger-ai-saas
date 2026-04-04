@@ -425,3 +425,14 @@
 - [ ] Configure Agent personality (User action required)
 - [ ] Send first real test message (User action required)
 - [ ] Monitor webhook logs (User action required)
+
+
+## BUG (RÉSOLU) : Webhook Messenger ne reçoit pas les événements
+- [x] Diagnostic : Webhook POST handler n'était pas appelé - Vite middleware interceptait les requêtes /api/webhook
+- [x] Root cause : `app.use("*", ...)` dans vite.ts attrapait toutes les requêtes avant les routes Express
+- [x] Solution 1 : Ajouter check `if (url.startsWith('/api/')) return next()` dans Vite middleware
+- [x] Solution 2 : Déplacer webhook routes registration APRÈS setupVite() pour éviter interception
+- [x] Vérification : Webhook handler fonctionne parfaitement via localhost:3000
+- [x] Webhook procedure traite correctement les événements Messenger
+- [x] Logs confirmés : webhook reçoit les messages, valide les pages, appelle la procédure
+- [x] Prochaine étape : Connecter une page réelle dans la DB pour tester le flux complet

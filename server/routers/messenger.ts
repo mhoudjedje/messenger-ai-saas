@@ -167,16 +167,20 @@ export const messengerRouter = router({
     )
     .mutation(async ({ input }) => {
       const event = input as MessengerEvent;
+      console.log('[Webhook Procedure] Starting webhook processing');
+      console.log('[Webhook Procedure] Event entries:', event.entry.length);
 
       for (const entry of event.entry) {
         const pageId = entry.id;
+        console.log('[Webhook Procedure] Processing entry for page:', pageId);
 
         // Obtenir la page Messenger
         const page = await getMessengerPageByPageId(pageId);
         if (!page) {
-          console.warn(`[Webhook] Page not found: ${pageId}`);
+          console.warn(`[Webhook Procedure] Page not found: ${pageId}`);
           continue;
         }
+        console.log('[Webhook Procedure] Page found:', page.pageName);
 
         // Traiter chaque message
         for (const messagingEvent of entry.messaging) {

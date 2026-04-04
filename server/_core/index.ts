@@ -46,7 +46,7 @@ async function startServer() {
   
   // Temporary request logging for debugging
   app.use((req, res, next) => {
-    if (req.path.includes('oauth') || req.path.includes('callback')) {
+    if (req.path.includes('oauth') || req.path.includes('callback') || req.path.includes('webhook')) {
       console.log(`[REQ] ${req.method} ${req.originalUrl} | Host: ${req.get('host')} | Origin: ${req.get('origin')}`);
     }
     next();
@@ -57,12 +57,6 @@ async function startServer() {
   registerMetaOAuthRoutes(app);
   // Aiteam Authentication routes (Email OTP + Google OAuth)
   registerAiteamAuthRoutes(app);
-  // Messenger webhook routes
-  registerMessengerWebhookRoutes(app);
-  // Stripe webhook routes (must be before express.json middleware for raw body)
-  registerStripeWebhookRoutes(app);
-  // Chargily payment routes
-  registerChargilyRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",
@@ -77,6 +71,12 @@ async function startServer() {
   } else {
     serveStatic(app);
   }
+  // Messenger webhook routes (must be after Vite setup to avoid being intercepted)
+  registerMessengerWebhookRoutes(app);
+  // Stripe webhook routes (must be before express.json middleware for raw body)
+  registerStripeWebhookRoutes(app);
+  // Chargily payment routes
+  registerChargilyRoutes(app);
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
